@@ -1,1 +1,1 @@
-# Hummingbird-Scratch
+# Chrome-Scratch-and-Snap-Support
