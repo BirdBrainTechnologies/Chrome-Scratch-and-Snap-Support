@@ -1,1 +1,2 @@
 # Chrome-Scratch-and-Snap-Support
+The Chrome Apps folder contains the necessary chrome apps needed for scratch and snap to interface with the hummingbird and finch along with their source code. The Scratch Plugins contains extensions for scratchx that allow scratchx to talk with the chrome app. The snap projects folder contains starter projects for the finch and hummingbird that contain all the necessary blocks to contol the device. Before using either the snap projects or scratchx extensions, make sure the you first start the chrome app. 
