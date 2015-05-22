@@ -203,7 +203,7 @@
                         enableIOControls(false);
                         return;
                     }
-                    setTimeout(pollSendSensors,200);
+                    setTimeout(pollSendSensors,250);
     
                 });
             });
@@ -221,7 +221,7 @@
         }
         sortMessages(data);
         if(connection!==-1)
-            setTimeout(pollForSensors,10);
+            setTimeout(pollForSensors,50);
     });
   };
   
