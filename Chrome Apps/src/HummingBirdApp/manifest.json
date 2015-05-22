@@ -1,0 +1,32 @@
+{
+	"name": "Hummingbird App",
+	"manifest_version": 2,
+	"version": "0.5",
+    "minimum_chrome_version": "38",
+	"app": {
+		"background": {
+			"scripts": [ "main.js"]
+		}
+	},
+    "externally_connectable": {
+        "matches": ["*://scratch.mit.edu/*",
+		  			        "*://scratchx.org/*",
+		  			        "*://snap.berkeley.edu/*"
+		  			]
+    },
+    
+    "icons": {  "16": "assets/hummingbird16.png",
+                "48": "assets/hummingbird48.png",
+                "128": "assets/hummingbird128.png" 
+             },
+    
+	"permissions": [
+		"hid",
+        "tts",
+		{
+			"usbDevices": [
+				{ "vendorId": 9044, "productId": 8738 }
+ 			]
+		}
+	]
+}
