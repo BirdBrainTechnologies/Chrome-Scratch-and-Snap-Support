@@ -176,7 +176,7 @@
     //this function sends requests to the finch for all of its sensor data
     //this call is made 4 times a second and if it fails, it marks the
     //finch as no longer connected
-    var pollSendSenosors = function () {
+    var pollSendSensors = function () {
         var bytes = new Uint8Array(8);
         //temperature
         bytes[0] = "T".charCodeAt();
