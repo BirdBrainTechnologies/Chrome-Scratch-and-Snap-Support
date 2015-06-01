@@ -1,5 +1,5 @@
 (function (ext) {
-    var hummingbirdAppID = "gkedchhhodbbiojogfhkfieobopcmjnj"; //unique app ID for Hummingbird Scratch App
+    var hummingbirdAppID = "lfloofocohhfeeoohpokmljiinfmpenj"; //unique app ID for Hummingbird Scratch App
     //port connecting to chrome app
     var hPort;
     //connection status

@@ -1,5 +1,5 @@
 (function (ext) {
-    finchAppID = "agekgdamojgfpbfknfebdopkokldcjko"; //unique app ID for Finch Scratch App
+    finchAppID = "ojocioejjpmeccjfjlhkepchminjemod"; //unique app ID for Finch Scratch App
     //port connecting to chrome app
     var fPort;
 
