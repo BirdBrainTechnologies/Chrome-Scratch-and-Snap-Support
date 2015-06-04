@@ -121,7 +121,31 @@
             });
         }
     };
-
+    //this function sends requests to the hummingbird for all of its sensor data
+    //this call is made 20 times a second and if it fails, it marks the
+    //hummingbird as no longer connected
+    var pollSensors = function () {
+        var bytes = new Uint8Array(8);
+        //all sensors
+        bytes[0] = "G".charCodeAt(0);
+        bytes[1] = "3".charCodeAt(0);
+        for (var i = 2; i < bytes.length; ++i) {
+            bytes[i] = 0;
+        }
+        var id = 0;
+        chrome.hid.send(connection, id, bytes.buffer, function () {
+            setTimeout(function(){
+                recvSensors();
+                var lastError = chrome.runtime.lastError;
+                if (lastError) {
+                    connection = -1;
+                    enableIOControls(false);
+                    return;
+                }
+                setTimeout(pollSensors, 50);
+            },10);
+        });
+    };
     //this function reads reports send from the hummingbird 20 times a second
     //NOTE: The sensor data is still raw information and not converted to any
     //standard form. This is because the hummingbird can have many different
@@ -148,32 +172,6 @@
             if (hummingbirdPort !== undefined) {
                 hummingbirdPort.postMessage(sensor_nums);
             }
-
-            if (connection !== -1) {
-                setTimeout(recvSensors, 50);
-            }
-        });
-    };
-    //this function sends requests to the hummingbird for all of its sensor data
-    //this call is made 20 times a second and if it fails, it marks the
-    //hummingbird as no longer connected
-    var pollSensors = function () {
-        var bytes = new Uint8Array(8);
-        //all sensors
-        bytes[0] = "G".charCodeAt(0);
-        bytes[1] = "3".charCodeAt(0);
-        for (var i = 2; i < bytes.length; ++i) {
-            bytes[i] = 0;
-        }
-        var id = 0;
-        chrome.hid.send(connection, id, bytes.buffer, function () {
-            var lastError = chrome.runtime.lastError;
-            if (lastError) {
-                connection = -1;
-                enableIOControls(false);
-                return;
-            }
-            setTimeout(pollSensors, 50);
         });
     };
     //controls the display of the app (showing if the hummingbird is connected or
