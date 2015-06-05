@@ -1,7 +1,7 @@
 {
 	"name": "Hummingbird Connection App",
 	"manifest_version": 2,
-	"version": "0.5",
+	"version": "0.7",
     "minimum_chrome_version": "38",
 	"app": {
 		"background": {
@@ -19,10 +19,11 @@
                 "48": "assets/hummingbird48.png",
                 "128": "assets/hummingbird128.png" 
              },
-    
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAy4DpDsJ57mdQ41fTBifsiGchBibOWiNIxys3NVsLwcbcELJSfeYGsFsepj0wMvqVeCt9eASBAhYVSYwqVUE+17xcirYcABGbA3+sW0iv74V+RAQtm8M2keKzxDt7wNbN3S/kHOWLdYAorGEpC5L/YnJir3nJK64BZNkwF0ZI7VtFrLPHyer+OTpa8RBA4AYhyG4H/7Y+Sod90vjnCXhe50fCW76u9cersog6bAVPHL3L3w9pa1StNvZyyfoM+/hkZ+qSyN86xAt7hD6W4qlmFF8Xcrbf1PrSPxqrR+X5QPLiy193LI/gzdgmwNe0ufbGR6KaSFvttnQ8Ur+UNDisEQIDAQAB",
 	"permissions": [
-		"hid",
+		    "hid",
         "tts",
+        "browser",
 		{
 			"usbDevices": [
 				{ "vendorId": 9044, "productId": 8738 }

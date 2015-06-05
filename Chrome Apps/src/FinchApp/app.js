@@ -1,4 +1,24 @@
 (function () {
+  
+  function openSnap(){
+    var radios = document.getElementsByName('level');
+
+    for (var i = 0, length = radios.length; i < length; i++) {
+        if (radios[i].checked) {
+            chrome.browser.openTab({
+                url: radios[i].value
+            });
+            break;
+        }
+}
+    
+  }
+  function openScratch(){
+    chrome.browser.openTab({
+      url: 'http://bit.ly/ScratchXFinch'
+    });
+  }
+  
     var ui = {
         connected: null,
         disconnected: null
@@ -34,6 +54,8 @@
         enableIOControls(false);
         chrome.runtime.onMessageExternal.addListener(onMsgRecv);
         chrome.runtime.onConnectExternal.addListener(onConnect);
+        document.getElementById("snapButton").addEventListener('click',openSnap);
+        document.getElementById("scratchButton").addEventListener('click',openScratch);
         enumerateDevices();
     };
 
@@ -47,9 +69,7 @@
         port.onDisconnect.addListener(function () {
             finchPort = undefined;
         });
-        // a listener for messages send via this connection 
-        //(when the client doesn't open a long
-        //term port for communication)
+        // a listener for messages send via this connection
         port.onMessage.addListener(function (request) {
             //the message is asking for the status of the finch (connected or disconnected)
             if (request.message === "STATUS") {
@@ -173,10 +193,7 @@
         }
     };
 
-    //this function sends requests to the finch for all of its sensor data
-    //this call is made 4 times a second and if it fails, it marks the
-    //finch as no longer connected
-    var pollSendSensors = function () {
+    var pollSensors = function(){
         var bytes = new Uint8Array(8);
         //temperature
         bytes[0] = "T".charCodeAt();
@@ -185,20 +202,8 @@
         }
         bytes[7] = "T".charCodeAt();
         chrome.hid.send(connection, 0, bytes.buffer, function () {
-            var lastError = chrome.runtime.lastError;
-            if (lastError) {
-                connection = -1;
-                enableIOControls(false);
-                return;
-            }
-            var bytes = new Uint8Array(8);
-            //light sensors
-            bytes[0] = "L".charCodeAt();
-            for (var i = 1; i < bytes.length - 1; ++i) {
-                bytes[i] = 0;
-            }
-            bytes[7] = "L".charCodeAt();
-            chrome.hid.send(connection, 0, bytes.buffer, function () {
+            setTimeout(function(){
+                pollForSensors();
                 var lastError = chrome.runtime.lastError;
                 if (lastError) {
                     connection = -1;
@@ -206,41 +211,64 @@
                     return;
                 }
                 var bytes = new Uint8Array(8);
-                //obstacle sensors
-                bytes[0] = "I".charCodeAt();
+                //light sensors
+                bytes[0] = "L".charCodeAt();
                 for (var i = 1; i < bytes.length - 1; ++i) {
                     bytes[i] = 0;
                 }
-                bytes[7] = "I".charCodeAt();
+                bytes[7] = "L".charCodeAt();
                 chrome.hid.send(connection, 0, bytes.buffer, function () {
-                    var lastError = chrome.runtime.lastError;
-                    if (lastError) {
-                        connection = -1;
-                        enableIOControls(false);
-                        return;
-                    }
-                    var bytes = new Uint8Array(8);
-                    //accelerometer info
-                    bytes[0] = "A".charCodeAt();
-                    for (var i = 1; i < bytes.length - 1; ++i) {
-                        bytes[i] = 0;
-                    }
-                    bytes[7] = "A".charCodeAt();
-                    chrome.hid.send(connection, 0, bytes.buffer, function () {
+                    setTimeout(function(){
+                        pollForSensors();
                         var lastError = chrome.runtime.lastError;
                         if (lastError) {
                             connection = -1;
                             enableIOControls(false);
                             return;
                         }
-                        //if all the messages sent, send another request in 250ms
-                        setTimeout(pollSendSensors, 250);
-
-                    });
+                        var bytes = new Uint8Array(8);
+                        //obstacle sensors
+                        bytes[0] = "I".charCodeAt();
+                        for (var i = 1; i < bytes.length - 1; ++i) {
+                            bytes[i] = 0;
+                        }
+                        bytes[7] = "I".charCodeAt();
+                        chrome.hid.send(connection, 0, bytes.buffer, function () {
+                            setTimeout(function(){
+                                pollForSensors();
+                                var lastError = chrome.runtime.lastError;
+                                if (lastError) {
+                                    connection = -1;
+                                    enableIOControls(false);
+                                    return;
+                                }
+                                var bytes = new Uint8Array(8);
+                                //accelerometer info
+                                bytes[0] = "A".charCodeAt();
+                                for (var i = 1; i < bytes.length - 1; ++i) {
+                                    bytes[i] = 0;
+                                }
+                                bytes[7] = "A".charCodeAt();
+                                chrome.hid.send(connection, 0, bytes.buffer, function () {
+                                    setTimeout(function(){
+                                      pollForSensors();
+                                        var lastError = chrome.runtime.lastError;
+                                        if (lastError) {
+                                            connection = -1;
+                                            enableIOControls(false);
+                                            return;
+                                        }
+                                        setTimeout(pollSensors,100);
+                                    },10);   
+                                });
+                            },10);
+                        });
+                    },10);
                 });
-            });
+            },10);
         });
     };
+
     //this function reads reports send from the finch 20 times a second and then
     //parses them to see what information they contain
     //messages are identified by the last byte.
@@ -253,8 +281,6 @@
                 return;
             }
             sortMessages(data);
-            if (connection !== -1)
-                setTimeout(pollForSensors, 50);
         });
     };
     //controls the display of the app (showing if the finch is connected or
@@ -309,8 +335,9 @@
         }
         connection = connectInfo.connectionId;
         enableIOControls(true);
-        pollForSensors();
-        pollSendSensors();
+        //pollForSensors();
+        //pollSendSensors();
+        pollSensors();
     };
     //connects to non-null devices in device map
     var connect = function () {
