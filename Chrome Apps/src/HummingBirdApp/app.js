@@ -1,4 +1,16 @@
 (function () {
+  
+  function openSnap(){
+    chrome.browser.openTab({
+      url: 'http://bit.ly/humming-chrome'
+    });
+  }
+  function openScratch(){
+    chrome.browser.openTab({
+      url: 'http://bit.ly/ScratchXHumm'
+    });
+  }
+  
     var ui = {
         connected: null,
         disconnected: null
@@ -23,7 +35,8 @@
         }
 
         enableIOControls(false);
-
+        document.getElementById("snapButton").addEventListener('click',openSnap);
+        document.getElementById("scratchButton").addEventListener('click',openScratch);
         chrome.runtime.onMessageExternal.addListener(onMsgRecv);
         chrome.runtime.onConnectExternal.addListener(onConnect);
         enumerateDevices();

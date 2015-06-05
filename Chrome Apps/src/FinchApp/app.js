@@ -1,4 +1,24 @@
 (function () {
+  
+  function openSnap(){
+    var radios = document.getElementsByName('level');
+
+    for (var i = 0, length = radios.length; i < length; i++) {
+        if (radios[i].checked) {
+            chrome.browser.openTab({
+                url: radios[i].value
+            });
+            break;
+        }
+}
+    
+  }
+  function openScratch(){
+    chrome.browser.openTab({
+      url: 'http://bit.ly/ScratchXFinch'
+    });
+  }
+  
     var ui = {
         connected: null,
         disconnected: null
@@ -34,6 +54,8 @@
         enableIOControls(false);
         chrome.runtime.onMessageExternal.addListener(onMsgRecv);
         chrome.runtime.onConnectExternal.addListener(onConnect);
+        document.getElementById("snapButton").addEventListener('click',openSnap);
+        document.getElementById("scratchButton").addEventListener('click',openScratch);
         enumerateDevices();
     };
 
