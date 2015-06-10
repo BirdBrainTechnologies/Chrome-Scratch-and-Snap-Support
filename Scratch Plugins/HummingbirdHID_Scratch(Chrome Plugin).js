@@ -4,6 +4,8 @@
     var hPort;
     //connection status
     var hStatus = 0;
+    //whether or not this is a dup
+    var isDuo;
     //sensor info
     var sensorvalue = new Array(4);
     //when a new message is recieved, save all the info
@@ -20,7 +22,7 @@
                 setTimeout(getHummingbirdStatus, 1000);
             }
             else if (response.status === false) { //Chrome app says not connected
-                if (hStatus === 0) {
+                if (hStatus !== 1) {
                     console.log("Not connected");
                     hPort = chrome.runtime.connect(hummingbirdAppID);
                     hPort.onMessage.addListener(onMsgHummingbird);
@@ -29,8 +31,10 @@
                 setTimeout(getHummingbirdStatus, 1000);
             }
             else {// successfully connected
-                if (hStatus === 0) {
+                if (hStatus !==2) {
                     console.log("Connected");
+                    isDuo = response.duo;
+                    console.log("isDuo: " + isDuo);
                     hPort = chrome.runtime.connect(hummingbirdAppID);
                     hPort.onMessage.addListener(onMsgHummingbird);
                 }
@@ -126,26 +130,44 @@
     };
 
     ext.getDistance = function (port) {
-        var reading = sensorvalue[port - 1] * 4;
-        if (reading < 130) {
-            return 100;
-        }
-        else { //formula based on mathematical regression
-            reading = reading - 120;
-            var distance;
-            if (reading > 680)
-                distance = 5.0;
-            else {
-                var sensor_val_square = reading * reading;
-                distance = sensor_val_square * sensor_val_square * reading * -0.000000000004789
-                    + sensor_val_square * sensor_val_square * 0.000000010057143
-                    - sensor_val_square * reading * 0.000008279033021
-                    + sensor_val_square * 0.003416264518201
-                    - reading * 0.756893112198934
-                    + 90.707167605683000;
-            }
+      var reading, sensor_val_square,distance;
+      if (isDuo){
+          reading = sensorvalue[port - 1] * 4;
+          if (reading < 130) {
+              return 100;
+          }
+          else { //formula based on mathematical regression
+              reading = reading - 120;
+              if (reading > 680)
+                  distance = 5.0;
+              else {
+                  sensor_val_square = reading * reading;
+                  distance = sensor_val_square * sensor_val_square * reading * -0.000000000004789
+                      + sensor_val_square * sensor_val_square * 0.000000010057143
+                      - sensor_val_square * reading * 0.000008279033021
+                      + sensor_val_square * 0.003416264518201
+                      - reading * 0.756893112198934
+                      + 90.707167605683000;
+              }
+              return parseInt(distance);
+          }
+      }
+      else{
+          reading = sensorvalue[port-1];
+          if(reading < 23){
+            return 80;
+          }
+          else { //formula based on mathematical regression
+            sensor_val_square = reading * reading;
+            distance = 
+                      206.76903754529479-9.3402257299483011*reading
+                    + 0.19133513242939543*sensor_val_square
+                    - 0.0019720997497951645*sensor_val_square * reading 
+                    + 9.9382154479167215*Math.pow(10, -6)*sensor_val_square*sensor_val_square
+                    - 1.9442731496914311*Math.pow(10, -8)*sensor_val_square*sensor_val_square*reading;
             return parseInt(distance);
-        }
+        }  
+      }
     };
 
     ext.getVolt = function (port) {
