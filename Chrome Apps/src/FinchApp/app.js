@@ -109,6 +109,10 @@
                     bytes[i] = 0;
                 }
                 chrome.hid.send(connection, 0, bytes.buffer, function () {
+                    if (chrome.runtime.lastError) {
+                        enableIOControls(false);
+                        return;
+                    }
                 });
             }
         });
@@ -189,6 +193,10 @@
                 bytes[i] = 0;
             }
             chrome.hid.send(connection, 0, bytes.buffer, function () {
+                if (chrome.runtime.lastError) {
+                  enableIOControls(false);
+                  return;
+                }
             });
         }
     };
@@ -202,14 +210,13 @@
         }
         bytes[7] = "T".charCodeAt();
         chrome.hid.send(connection, 0, bytes.buffer, function () {
+            if (chrome.runtime.lastError) {
+                connection = -1;
+                enableIOControls(false);
+                return;
+            }
             setTimeout(function(){
                 pollForSensors();
-                var lastError = chrome.runtime.lastError;
-                if (lastError) {
-                    connection = -1;
-                    enableIOControls(false);
-                    return;
-                }
                 var bytes = new Uint8Array(8);
                 //light sensors
                 bytes[0] = "L".charCodeAt();
@@ -218,14 +225,13 @@
                 }
                 bytes[7] = "L".charCodeAt();
                 chrome.hid.send(connection, 0, bytes.buffer, function () {
+                    if (chrome.runtime.lastError) {
+                        connection = -1;
+                        enableIOControls(false);
+                        return;
+                    }
                     setTimeout(function(){
                         pollForSensors();
-                        var lastError = chrome.runtime.lastError;
-                        if (lastError) {
-                            connection = -1;
-                            enableIOControls(false);
-                            return;
-                        }
                         var bytes = new Uint8Array(8);
                         //obstacle sensors
                         bytes[0] = "I".charCodeAt();
@@ -234,14 +240,13 @@
                         }
                         bytes[7] = "I".charCodeAt();
                         chrome.hid.send(connection, 0, bytes.buffer, function () {
+                            if (chrome.runtime.lastError) {
+                                connection = -1;
+                                enableIOControls(false);
+                                return;
+                            }
                             setTimeout(function(){
                                 pollForSensors();
-                                var lastError = chrome.runtime.lastError;
-                                if (lastError) {
-                                    connection = -1;
-                                    enableIOControls(false);
-                                    return;
-                                }
                                 var bytes = new Uint8Array(8);
                                 //accelerometer info
                                 bytes[0] = "A".charCodeAt();
@@ -250,14 +255,13 @@
                                 }
                                 bytes[7] = "A".charCodeAt();
                                 chrome.hid.send(connection, 0, bytes.buffer, function () {
+                                    if (chrome.runtime.lastError) {
+                                        connection = -1;
+                                        enableIOControls(false);
+                                        return;
+                                    }
                                     setTimeout(function(){
-                                      pollForSensors();
-                                        var lastError = chrome.runtime.lastError;
-                                        if (lastError) {
-                                            connection = -1;
-                                            enableIOControls(false);
-                                            return;
-                                        }
+                                        pollForSensors();
                                         setTimeout(pollSensors,100);
                                     },10);   
                                 });
@@ -274,8 +278,7 @@
     //messages are identified by the last byte.
     var pollForSensors = function () {
         chrome.hid.receive(connection, function (id, data) {
-            var lastError = chrome.runtime.lastError;
-            if (lastError) {
+            if (chrome.runtime.lastError) {
                 connection = -1;
                 enableIOControls(false);
                 return;
@@ -290,7 +293,6 @@
         ui.connected.style.display = ioEnabled ? 'inline' : 'none';
     };
 
-    var pendingDeviceEnumerations;
     //looks for devices
     var enumerateDevices = function () {
         var deviceIds = [];
@@ -302,30 +304,20 @@
                 deviceIds = deviceIds.concat(p.usbDevices);
             }
         }
-        pendingDeviceEnumerations = 0;
-        pendingDeviceMap = {};
-        for (var j = 0; j < deviceIds.length; ++j) {
-            ++pendingDeviceEnumerations;
-            //looks for hid device with vendor&product id specified in manifest
-            chrome.hid.getDevices(deviceIds[j], onDevicesEnumerated);
-        }
+        //looks for hid device with vendor&product id specified in manifest
+        chrome.hid.getDevices(deviceIds[0], onDevicesEnumerated);
     };
 
     //after devices have been found, the devices variable is an array of
     //HidDeviceInfo, after waiting a second it checks for devices again
     var onDevicesEnumerated = function (devices) {
         for (var i = 0; i < devices.length; ++i) {
-            pendingDeviceMap[devices[i].deviceId] = devices[i];
+            deviceMap[devices[i].deviceId] = devices[i];
         }
-        --pendingDeviceEnumerations;
-        if (pendingDeviceEnumerations === 0) {
-            //maps opaque device id to HidDeviceInfo
-            deviceMap = pendingDeviceMap;
-            if (connection === -1) {
-                connect();
-            }
-            setTimeout(enumerateDevices, 1000);
+        if (connection === -1) {
+            connect();
         }
+        setTimeout(enumerateDevices, 1000);
     };
     //records the connection, displays on app that the connection was made,
     //begins polling for information
@@ -335,8 +327,6 @@
         }
         connection = connectInfo.connectionId;
         enableIOControls(true);
-        //pollForSensors();
-        //pollSendSensors();
         pollSensors();
     };
     //connects to non-null devices in device map
