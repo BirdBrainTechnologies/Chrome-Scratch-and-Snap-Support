@@ -77,7 +77,6 @@
                         enableIOControls(false);
                         return;
                     }
-                    
                     var data_array = new Uint8Array(data);
                     if(data_array[0] === 0x03 && data_array[1] === 0x00){
                       console.log("isDuo");
@@ -334,12 +333,14 @@
             return;
         }
         connection = connectInfo.connectionId;
-        getHummingbirdType();
+        setTimeout(function(){
+          getHummingbirdType();
+        }, 100);//timeout gives us time to actually connect before we ask for type
         setTimeout(function(){
             enableIOControls(true);
             pollSensors();
             recvSensors();
-        }, 20);//so we have enough time for getHummingbirdType to finish
+        }, 200);//so we have enough time for getHummingbirdType to finish 
     };
     //connects to non-null devices in device map
     var connect = function () {
