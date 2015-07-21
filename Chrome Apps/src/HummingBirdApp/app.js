@@ -366,7 +366,7 @@
         //first look at devices I know
         chrome.bluetooth.getDevices(function(knownDevices){
             for (var knownDevice in knownDevices) {
-                if (knownDevice.uuids !== undefined) {
+                if (knownDevices.hasOwnProperty(knownDevice) && knownDevice.uuids !== undefined) {
                     console.log("Known device: " + knownDevice.name);
                     if (knownDevice.uuids.indexOf(BLEServiceUUID) > -1) {
                         BLEDeviceList.push(deviceFound);
