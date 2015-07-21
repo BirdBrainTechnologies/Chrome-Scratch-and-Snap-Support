@@ -29,7 +29,7 @@
     var deviceMap = {};
 
     //bluetoothStuff
-    var BLEDeviceList = {};
+    var BLEDeviceList = [];
     var isBluetoothConnection = false;
     var selectedBLEDevice = null;
     var rxID, txID;
