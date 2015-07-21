@@ -1,4 +1,4 @@
-new (function() {
+(function() {
     var sensor_nums = {   temperature: 0,
         light1: 0,
         light2: 0,
@@ -83,8 +83,8 @@ new (function() {
     function stopPolling() {
         if(pollerRec) clearInterval(pollerRec);
         if(pollerSend) clearInterval(pollerSend);
-        var pollerRec = null;
-        var pollerSend = null;
+        pollerRec = null;
+        pollerSend = null;
     }
 
     ext._shutdown = function() {
