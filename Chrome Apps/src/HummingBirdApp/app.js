@@ -60,7 +60,6 @@
             console.log(platform);
             if(platform === 'cros'){
                 enumerateBLEDevices();
-                setTimeout(haltDiscovery, 10000);
             }
         });
         document.getElementById("snapButton").addEventListener('click',openSnap);
@@ -363,24 +362,17 @@
     };
 
     var enumerateBLEDevices = function() {
-      console.log("starting discovery!\n");
+      console.log("starting looking!\n");
         //first look at devices I know
         chrome.bluetooth.getDevices(function(knownDevices){
             for (var knownDevice in knownDevices) {
-                if (knownDevice.uuids !== undefined && knownDevice.uuids !== null) {
+                if (knownDevice.uuids !== undefined) {
                     console.log("Known device: " + knownDevice.name);
                     if (knownDevice.uuids.indexOf(BLEServiceUUID) > -1) {
                         BLEDeviceList.push(deviceFound);
                         ui.bluetooth.style.display = 'inline';
                     }
                 }
-            }
-        });
-
-        //try to discover other devices
-        chrome.bluetooth.getAdapterState(function(adapterInfo){
-            if(adapterInfo.powered && adapterInfo.available){
-                chrome.bluetooth.startDiscovery();
             }
         });
     };
@@ -426,7 +418,7 @@
         });
     };
     chrome.bluetooth.onDeviceAdded.addListener(function(deviceFound){
-        console.log("found a bluetooth");
+        console.log("found a bluetooth: " + deviceFound.name);
         if(deviceFound.uuids.indexOf(BLEServiceUUID) > -1) {
             BLEDeviceList.push(deviceFound);
             ui.bluetooth.style.display = 'inline';
