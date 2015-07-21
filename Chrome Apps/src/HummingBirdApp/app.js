@@ -57,6 +57,7 @@
         ui.bluetooth.style.display = 'none';
         chrome.runtime.getPlatformInfo(function (platformInfo) {
             platform = platformInfo.os;
+            console.log(platform);
             if(platform === 'cros'){
                 enumerateBLEDevices();
                 setTimeout(haltDiscovery, 10000);
