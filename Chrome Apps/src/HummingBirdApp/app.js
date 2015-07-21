@@ -21,19 +21,29 @@
         connected: null,
         disconnected: null,
         arduino: null,
-        uno: null
+        uno: null,
+        bluetooth: null
     };
     var isDisconnectedInArduinoMode = false;
     var connection = -1;
     var deviceMap = {};
-    var pendingDeviceMap = {};
+
+    //bluetoothStuff
+    var BLEDeviceList = {};
+    var isBluetoothConnection = false;
+    var selectedBLEDevice = null;
+    var rxID, txID;
+    var BLEServiceUUID      = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E";
+    var BLEServiceUUIDTX    = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";//sending
+    var BLEServiceUUIDRX    = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";//receiving
+
     //raw sensor info from hummingbird
     var sensor_nums = new Array(4);
     var platform;
+
     //creates the initial window for the app, adds listeners for when a connection
     //is made, and looks for the hummingbird
     var initializeWindow = function () {
-        //foundArduinoMode(["foo"]);
         for (var k in ui) {
             var id = k.replace(/([A-Z])/, '-$1').toLowerCase();
             var element = document.getElementById(id);
@@ -44,19 +54,64 @@
         }
 
         enableIOControls(false);
+        chrome.runtime.getPlatformInfo(function (platformInfo) {
+            platform = platformInfo.os;
+            if(platform === 'cros'){
+                enumerateBLEDevices();
+                setTimeout(haltDiscovery, 10000);
+                ui.bluetooth.style.display = 'none';
+            } else{
+                ui.bluetooth.style.display = 'none';
+            }
+        });
         document.getElementById("snapButton").addEventListener('click',openSnap);
         document.getElementById("scratchButton").addEventListener('click',openScratch);
+        document.getElementById("bluetooth").addEventListener('click', onBluetoothClick);
         chrome.runtime.onMessageExternal.addListener(onMsgRecv);
         chrome.runtime.onConnectExternal.addListener(onConnect);
         enumerateDevices();
     };
     
     var isDuo;
-    
+    var onBluetoothClick = function(){
+        chrome.app.window.create("bleList.html",
+            {innerBounds: { width: 300, height: 500, minWidth: 100}},
+            function(window){
+                var onDeviceClicked = function(index){
+                    selectedBLEDevice = BLEDeviceList[index];
+                    window.close();
+                };
+                var list = window.document.getElementById("Main_List");
+                window.onClosed.addListener(bluetoothSelectorClosed);
+                for (var deviceCount = 0; deviceCount < BLEDeviceList.length; deviceCount++){
+                    var node = document.createElement("li");
+                    var inputNode = document.createElement("input");
+                    inputNode.style.float = "left";
+                    inputNode.type = "button";
+                    inputNode.id = "Device" + deviceCount;
+                    inputNode.value = BLEDeviceList[deviceCount].name;
+                    node.appendChild(inputNode);
+                    list.appendChild(node);
+
+                    window.document.getElementById("Device" + deviceCount).addEventListener('click',onDeviceClicked(deviceCount));
+                }
+            });
+    };
+
+    var bluetoothSelectorClosed = function(){
+        if (selectedBLEDevice === null){
+            return;
+        }
+        connectToBLE(selectedBLEDevice, startPollBLE);
+    };
     function getHummingbirdType() {
         isDuo = false;
         if(connection == -1)
             return;
+        if(isBluetoothConnection) {
+            isDuo = true;
+            return;
+        }
         var bytes = new Uint8Array(8);
         bytes[0] = 'G'.charCodeAt(0);
         bytes[1] = '4'.charCodeAt(0);
@@ -83,7 +138,7 @@
                       isDuo = true;
                     }
                 });
-            },10);
+            },15);
         });
     }
 
@@ -136,12 +191,16 @@
                     bytes[i] = 0;
                 }
                 var id = 0;
-                chrome.hid.send(connection, id, bytes.buffer, function () {
-                    if (chrome.runtime.lastError) {
-                        enableIOControls(false);
-                        return;
-                    }
-                });
+                if(isBluetoothConnection){
+                    sendMessageBLE(bytes.buffer);
+                } else {
+                    chrome.hid.send(connection, id, bytes.buffer, function () {
+                        if (chrome.runtime.lastError) {
+                            enableIOControls(false);
+                            return;
+                        }
+                    });
+                }
             }
         });
 
@@ -185,12 +244,17 @@
                 bytes[i] = 0;
             }
             var id = 0;
-            chrome.hid.send(connection, id, bytes.buffer, function () {
-                if (chrome.runtime.lastError) {
-                    enableIOControls(false);
-                    return;
-                }
-            });
+            if(isBluetoothConnection){
+                sendMessageBLE(bytes.buffer);
+
+            } else {
+                chrome.hid.send(connection, id, bytes.buffer, function () {
+                    if (chrome.runtime.lastError) {
+                        enableIOControls(false);
+                        return;
+                    }
+                });
+            }
         }
     };
     //this function sends requests to the hummingbird for all of its sensor data
@@ -277,6 +341,79 @@
         
     };
 
+    var recvSensorsBLE = function(){
+        setTimeout(function() {
+            chrome.bluetoothLowEnergy.readCharacteristicValue(rxID.instanceId, function (characteristic) {
+                rxID = characteristic;
+                var data_array = rxID.value;
+                for (var i = 0; i < 4; i++) { //retrieves and stores all sensor values
+                    sensor_nums[i] = data_array[i];
+                }
+                //calls the post message function in the javascript using this plugin
+                //if a port has been opened. this allows for the user of this app
+                //to keep track of the updated information
+                if (hummingbirdPort !== undefined) {
+                    hummingbirdPort.postMessage(sensor_nums);
+                }
+            });
+        },50);
+    };
+
+    var enumerateBLEDevices = function() {
+        chrome.bluetooth.getAdapterState(function(adapterInfo){
+            if(adapterInfo.powered && adapterInfo.available){
+                chrome.bluetooth.startDiscovery();
+            }
+        });
+    };
+    var haltDiscovery = function(){
+        chrome.bluetooth.getAdapterState(function(adapterInfo){
+            if(adapterInfo.powered && adapterInfo.discovering){
+                chrome.bluetooth.stopDiscovery();
+            }
+        });
+    };
+    var connectToBLE = function(device, callback){
+        chrome.bluetooth.connect(device.address, false, function(){
+            //connected
+            chrome.bluetoothLowEnergy.getService(BLEServiceUUID,function(service){
+                chrome.bluetoothLowEnergy.getCharacteristic(BLEServiceUUIDRX, function(RXchar){
+                    rxID = RXchar;
+                    chrome.bluetoothLowEnergy.getCharacteristic(BLEServiceUUIDTX, function(TXchar){
+                        txID = TXchar;
+                        isBluetoothConnection = true;
+                        enableIOControls(true);
+                        haltDiscovery();
+                        callback();
+                    });
+                });
+            });
+        });
+    };
+
+    var sendMessageBLE = function(arrayBuf, callback){
+        chrome.bluetoothLowEnergy.writeCharacteristicValue(txID.instanceId, arrayBuf, callback);
+    };
+
+    var startPollBLE = function(){
+        var bytes = new Uint8Array(8);
+        bytes[0] = 'G'.charCodeAt(0);
+        bytes[1] = '6'.charCodeAt(0);
+        for (var i = 2; i<bytes.length; i++){
+            bytes[i] = 0;
+        }
+        sendMessageBLE(bytes.buffer, function(){
+            recvSensorsBLE();
+        });
+    };
+
+    chrome.bluetooth.onDeviceAdded.addListener(function(deviceFound){
+        if(deviceFound.uuids.indexOf(BLEServiceUUID) > -1) {
+            BLEDeviceList.push(deviceFound);
+            ui.bluetooth.style.display = 'inline';
+        }
+    });
+
     //looks for devices
     var enumerateDevices = function () {
         var deviceIds = [];
@@ -296,7 +433,7 @@
         //looks for hid device with vendor&product id specified in manifest
         chrome.hid.getDevices(deviceIds[0], onDevicesEnumerated);
     };
-    
+
     //after devices have been found, the devices variable is an array of
     //HidDeviceInfo, after waiting a second it checks for devices again
     var onDevicesEnumerated = function (devices) {
@@ -340,7 +477,7 @@
             enableIOControls(true);
             pollSensors();
             recvSensors();
-        }, 200);//so we have enough time for getHummingbirdType to finish 
+        }, 250);//so we have enough time for getHummingbirdType to finish 
     };
     //connects to non-null devices in device map
     var connect = function () {
@@ -353,9 +490,6 @@
         }
     };
 
-    chrome.runtime.getPlatformInfo(function (platformInfo) {
-        platform = platformInfo.os;
-    });
     
     //-------------------------------------------------------------------------
     //http server stuff--------------------------------------------------------
