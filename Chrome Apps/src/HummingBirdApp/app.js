@@ -54,14 +54,12 @@
         }
 
         enableIOControls(false);
+        ui.bluetooth.style.display = 'none';
         chrome.runtime.getPlatformInfo(function (platformInfo) {
             platform = platformInfo.os;
             if(platform === 'cros'){
                 enumerateBLEDevices();
                 setTimeout(haltDiscovery, 10000);
-                ui.bluetooth.style.display = 'none';
-            } else{
-                ui.bluetooth.style.display = 'none';
             }
         });
         document.getElementById("snapButton").addEventListener('click',openSnap);
