@@ -369,6 +369,7 @@
                 var knownDevice = knownDevices[i];
                 if (knownDevice.uuids !== undefined) {
                     console.log("Known device: " + knownDevice.name);
+                    console.log("With UUIDS: " + knownDevice.uuids);
                     if (knownDevice.uuids.indexOf(BLEServiceUUID) > -1) {
                         console.log("Hummingbird found!    " + knownDevice.name);
                         BLEDeviceList.push(deviceFound);
