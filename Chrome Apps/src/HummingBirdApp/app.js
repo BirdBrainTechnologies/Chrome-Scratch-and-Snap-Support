@@ -365,13 +365,15 @@
     var enumerateBLEDevices = function() {
       console.log("starting discovery!\n");
         //first look at devices I know
-        var knownDevices = chrome.bluetooth.getDevices();
-        for (var knownDevice in knownDevices){
-            if(knownDevice.uuids.indexOf(BLEServiceUUID) > -1) {
-                BLEDeviceList.push(deviceFound);
-                ui.bluetooth.style.display = 'inline';
+        chrome.bluetooth.getDevices(function(knownDevices){
+            for (var knownDevice in knownDevices){
+                if(knownDevice.uuids.indexOf(BLEServiceUUID) > -1) {
+                    BLEDeviceList.push(deviceFound);
+                    ui.bluetooth.style.display = 'inline';
+                }
             }
-        }
+        });
+
         //try to discover other devices
         chrome.bluetooth.getAdapterState(function(adapterInfo){
             if(adapterInfo.powered && adapterInfo.available){
