@@ -368,6 +368,7 @@
         chrome.bluetooth.getDevices(function(knownDevices){
             for (var knownDevice in knownDevices) {
                 if (knownDevice.uuids !== undefined && knownDevice.uuids !== null) {
+                    console.log("Known device: " + knownDevice.name);
                     if (knownDevice.uuids.indexOf(BLEServiceUUID) > -1) {
                         BLEDeviceList.push(deviceFound);
                         ui.bluetooth.style.display = 'inline';
