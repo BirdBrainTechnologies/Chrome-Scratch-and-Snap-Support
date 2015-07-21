@@ -372,7 +372,7 @@
                     console.log("With UUIDS: " + knownDevice.uuids);
                     if (knownDevice.uuids.indexOf(BLEServiceUUID) > -1) {
                         console.log("Hummingbird found!    " + knownDevice.name);
-                        BLEDeviceList.push(deviceFound);
+                        BLEDeviceList.push(knownDevice);
                         ui.bluetooth.style.display = 'inline';
                     }
                 }
