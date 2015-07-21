@@ -72,7 +72,7 @@
         enumerateDevices();
     };
     
-    var isDuo;
+    var isDuo = true;
     var onBluetoothClick = function(){
         chrome.app.window.create("bleList.html",
             {innerBounds: { width: 300, height: 500, minWidth: 100}},
@@ -105,9 +105,10 @@
         connectToBLE(selectedBLEDevice, startPollBLE);
     };
     function getHummingbirdType() {
-        isDuo = false;
-        if(connection == -1)
+        isDuo = true;
+        if(connection == -1) {
             return;
+        }
         if(isBluetoothConnection) {
             isDuo = true;
             return;
@@ -134,8 +135,11 @@
                     }
                     var data_array = new Uint8Array(data);
                     if(data_array[0] === 0x03 && data_array[1] === 0x00){
-                      console.log("isDuo");
-                      isDuo = true;
+                        console.log("isDuo");
+                        isDuo = true;
+                    } else
+                    {
+                        isDuo = false;
                     }
                 });
             },15);
@@ -360,6 +364,7 @@
     };
 
     var enumerateBLEDevices = function() {
+      console.log("starting discovery!\n");
         chrome.bluetooth.getAdapterState(function(adapterInfo){
             if(adapterInfo.powered && adapterInfo.available){
                 chrome.bluetooth.startDiscovery();
@@ -367,6 +372,7 @@
         });
     };
     var haltDiscovery = function(){
+      console.log("halting discovery\n");
         chrome.bluetooth.getAdapterState(function(adapterInfo){
             if(adapterInfo.powered && adapterInfo.discovering){
                 chrome.bluetooth.stopDiscovery();
@@ -408,6 +414,7 @@
     };
 
     chrome.bluetooth.onDeviceAdded.addListener(function(deviceFound){
+        console.log("found a bluetooth");
         if(deviceFound.uuids.indexOf(BLEServiceUUID) > -1) {
             BLEDeviceList.push(deviceFound);
             ui.bluetooth.style.display = 'inline';
