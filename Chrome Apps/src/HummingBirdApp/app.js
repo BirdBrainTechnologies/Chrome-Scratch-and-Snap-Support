@@ -69,6 +69,13 @@
     
     var isDuo = true;
 
+    function clearQueue() {
+        chrome.hid.receive(connection, function (num, data) {
+            if (chrome.runtime.lastError) {
+            }
+        });
+    }
+
     function getHummingbirdType(callback) {
         if(connection == -1) {
             return;
@@ -510,6 +517,7 @@
             return;
         }
         connection = connectInfo.connectionId;
+        clearQueue();
         setTimeout(function(){
           getHummingbirdType(function(){
               //so we have enough time for getHummingbirdType to finish
