@@ -88,6 +88,7 @@
         var id = 0;
         chrome.hid.send(connection, id, bytes.buffer, function () {
             if (chrome.runtime.lastError) {
+                connection = -1;
                 enableIOControls(false);
                 return;
             }
@@ -166,6 +167,7 @@
                 } else {
                     chrome.hid.send(connection, id, bytes.buffer, function () {
                         if (chrome.runtime.lastError) {
+                            connection = -1;
                             enableIOControls(false);
                         }
                     });
@@ -219,6 +221,7 @@
             } else {
                 chrome.hid.send(connection, id, bytes.buffer, function () {
                     if (chrome.runtime.lastError) {
+                        connection = -1;
                         enableIOControls(false);
                     }
                 });
@@ -242,6 +245,7 @@
             return;
         chrome.hid.send(connection, id, bytes.buffer, function () {
             if (chrome.runtime.lastError) {
+                connection = -1;
                 enableIOControls(false);
                 return;
             }
@@ -399,6 +403,7 @@
                         }
                         if(txID !== null && rxID !== null){
                             isBluetoothConnection = true;
+                            connection = 1;
                             enableIOControls(true);
                             startPollBLE();
                             callback();
@@ -429,6 +434,7 @@
         if (deviceRemoved === pairedBLEDevice) {
             enableIOControls(false);
             isBluetoothConnection = false;
+            connection = -1;
             pairedBLEDevice = null;
             txID = null;
             rxID = null;
@@ -461,12 +467,14 @@
     //after devices have been found, the devices variable is an array of
     //HidDeviceInfo, after waiting a second it checks for devices again
     var onDevicesEnumerated = function (devices) {
+        console.log("USB enumerated");
         for (var i = 0; i < devices.length; ++i) {
             //maps opaque device id to HidDeviceInfo
             deviceMap[devices[i].deviceId] = devices[i];
         }
         //maps opaque device id to HidDeviceInfo
         if (connection === -1) {
+            console.log("connecting");
             connect();
         }
         setTimeout(enumerateDevices, 1000);
