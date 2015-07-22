@@ -307,6 +307,7 @@
                 ui.bluetooth.style.display = ioEnabled ? 'inline' : 'none';
             }
         }
+        /*
         if (!ioEnabled && httpRunning){
           leds = [-1,-1,-1,-1];
           trileds = [[-1,-1,-1],[-1,-1,-1]];
@@ -314,6 +315,7 @@
           motors = [-1,-1];
           servos = [-1,-1,-1,-1];
         }
+        */
     };
 
     var recvSensorsBLE = function(){
