@@ -53,7 +53,6 @@
         }
 
         enableIOControls(false);
-        ui.bluetooth.style.display = 'none';
         chrome.runtime.getPlatformInfo(function (platformInfo) {
             platform = platformInfo.os;
             console.log(platform);
@@ -238,6 +237,7 @@
     //this call is made 20 times a second and if it fails, it marks the
     //hummingbird as no longer connected
     var pollSensors = function () {
+        console.log("polling sensors");
         var bytes = new Uint8Array(8);
         //all sensors
         bytes[0] = "G".charCodeAt(0);
