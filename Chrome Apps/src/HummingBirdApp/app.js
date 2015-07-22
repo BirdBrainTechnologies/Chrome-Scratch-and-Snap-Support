@@ -70,13 +70,14 @@
     
     var isDuo = true;
 
-    function getHummingbirdType() {
+    function getHummingbirdType(callback) {
         isDuo = true;
         if(connection == -1) {
             return;
         }
         if(isBluetoothConnection) {
             isDuo = true;
+            callback();
             return;
         }
         var bytes = new Uint8Array(8);
@@ -90,6 +91,7 @@
             if (chrome.runtime.lastError) {
                 connection = -1;
                 enableIOControls(false);
+                callback();
                 return;
             }
             setTimeout(function(){
@@ -98,6 +100,7 @@
                     if (chrome.runtime.lastError) {
                         connection = -1;
                         enableIOControls(false);
+                        callback();
                         return;
                     }
                     var data_array = new Uint8Array(data);
@@ -108,8 +111,9 @@
                     {
                         isDuo = false;
                     }
+                    callback();
                 });
-            },15);
+            },100);
         });
     }
 
@@ -503,13 +507,16 @@
         }
         connection = connectInfo.connectionId;
         setTimeout(function(){
-          getHummingbirdType();
+          getHummingbirdType(function(){
+              //so we have enough time for getHummingbirdType to finish
+              setTimeout(function(){
+                  enableIOControls(true);
+                  pollSensors();
+                  recvSensors();
+              }, 250);
+          });
         }, 100);//timeout gives us time to actually connect before we ask for type
-        setTimeout(function(){
-            enableIOControls(true);
-            pollSensors();
-            recvSensors();
-        }, 250);//so we have enough time for getHummingbirdType to finish 
+
     };
     //connects to non-null devices in device map
     var connect = function () {
