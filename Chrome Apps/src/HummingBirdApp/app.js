@@ -108,6 +108,7 @@
                         isDuo = true;
                     } else
                     {
+                        console.log("Uno, got response: " + data_array);
                         isDuo = false;
                     }
                     callback();
@@ -513,7 +514,6 @@
               setTimeout(function(){
                   enableIOControls(true);
                   pollSensors();
-                  recvSensors();
               }, 250);
           });
         }, 100);//timeout gives us time to actually connect before we ask for type
