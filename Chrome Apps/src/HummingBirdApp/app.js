@@ -359,9 +359,17 @@
             return;
         }
         chrome.bluetoothLowEnergy.connect(pairedBLEDevice.address, function(){
+            if(chrome.runtime.lastError){
+                console.log("Failed to connect");
+                return;
+            }
             //connected
             console.log("connected");
             chrome.bluetoothLowEnergy.getServices(pairedBLEDevice.address, function(services){
+                if(chrome.runtime.lastError){
+                    console.log("Failed to get Services");
+                    return;
+                }
                 var service;
                 for (var i = 0; i < services.length; i++){
                     if (services[i].uuid = BLEServiceUUID){
@@ -375,6 +383,10 @@
                 } else
                     console.log("UART");
                 chrome.bluetoothLowEnergy.getCharacteristics(service.instanceId, function (characteristics) {
+                    if(chrome.runtime.lastError){
+                        console.log("Failed to get characteristics");
+                        return;
+                    }
                     txID = null;
                     rxID = null;
                     for (var i = 0; i < characteristics.length; i++){
