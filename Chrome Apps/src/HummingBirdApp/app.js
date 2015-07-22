@@ -335,7 +335,7 @@
     };
 
     var enumerateBLEDevices = function() {
-      console.log("starting looking!\n");
+      console.log("looking at BLE!\n");
         //first look at devices I know
         chrome.bluetooth.getDevices(function(knownDevices){
             for (var i = 0; i < knownDevices.length; i++) {
@@ -344,12 +344,11 @@
                     if (knownDevice.uuids.indexOf(BLEServiceUUID) > -1) {
                         if(knownDevice.paired){
                             pairedBLEDevice = knownDevice;
-                            connectToBLE();
-                            return;
                         }
                     }
                 }
             }
+            connectToBLE();
         });
     };
 
@@ -437,6 +436,8 @@
 
     //looks for devices
     var enumerateDevices = function () {
+        console.log("looking at USB!\n");
+
         var deviceIds = [];
         var permissions = chrome.runtime.getManifest().permissions;
         for (var i = 0; i < permissions.length; ++i) {
@@ -519,6 +520,7 @@
     //while the above code is for javascript communications with this app
     //to control the hummingbird
     //-----------------------------------------------------------------------------------------------------------------
+    /*
     var httpRunning = false;
     var tcpServer = chrome.sockets.tcpServer;
     var tcpSocket = chrome.sockets.tcp;
@@ -532,7 +534,7 @@
     var motors = [-1,-1];
     var servos = [-1,-1,-1,-1];
   
-    function t2ab(str /* String */) {
+    function t2ab(str) {
         var buffer = new ArrayBuffer(str.length);
         var view = new DataView(buffer);
         for(var i = 0, l = str.length; i < l; i++) {
@@ -541,7 +543,7 @@
         return buffer;
     }
 
-    function ab2t(buffer /* ArrayBuffer */) {
+    function ab2t(buffer) {
         var str = '';
         var uArrayVal = new Uint8Array(buffer);
         for (var s = 0; s < uArrayVal.length; s++) {
@@ -629,7 +631,7 @@
           return;
         }
         var uriEnd = data.indexOf(" ", 4);
-        if (uriEnd < 0) { /* throw a wobbler */ return; }
+        if (uriEnd < 0) { return; }
         var uri = data.substring(4, uriEnd);
         // strip query string
         var q = uri.indexOf("?");
@@ -887,5 +889,6 @@
             }
         }
     }
+    */
     window.addEventListener('load', initializeWindow);
 }());
