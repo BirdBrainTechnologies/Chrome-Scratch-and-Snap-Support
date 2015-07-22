@@ -342,7 +342,6 @@
                 var knownDevice = knownDevices[i];
                 if (knownDevice.uuids !== undefined) {
                     if (knownDevice.uuids.indexOf(BLEServiceUUID) > -1) {
-                        BLEDeviceList.push(knownDevice);
                         if(knownDevice.paired){
                             pairedBLEDevice = knownDevice;
                             connectToBLE();
