@@ -29,9 +29,8 @@
     var deviceMap = {};
 
     //bluetoothStuff
-    var BLEDeviceList = [];
     var isBluetoothConnection = false;
-    var selectedBLEDevice = null;
+    var pairedBLEDevice = null;
     var rxID, txID;
     var BLEServiceUUID      = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E".toLowerCase();
     var BLEServiceUUIDTX    = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E".toLowerCase();//sending
@@ -64,44 +63,13 @@
         });
         document.getElementById("snapButton").addEventListener('click',openSnap);
         document.getElementById("scratchButton").addEventListener('click',openScratch);
-        document.getElementById("bluetooth").addEventListener('click', onBluetoothClick);
         chrome.runtime.onMessageExternal.addListener(onMsgRecv);
         chrome.runtime.onConnectExternal.addListener(onConnect);
         enumerateDevices();
     };
     
     var isDuo = true;
-    var onBluetoothClick = function(){
-        chrome.app.window.create("bleList.html",
-            {innerBounds: { width: 300, height: 500, minWidth: 100}},
-            function(window){
-                var onDeviceClicked = function(index){
-                    selectedBLEDevice = BLEDeviceList[index];
-                    window.close();
-                };
-                var list = window.document.getElementById("Main_List");
-                window.onClosed.addListener(bluetoothSelectorClosed);
-                for (var deviceCount = 0; deviceCount < BLEDeviceList.length; deviceCount++){
-                    var node = document.createElement("li");
-                    var inputNode = document.createElement("input");
-                    inputNode.style.float = "left";
-                    inputNode.type = "button";
-                    inputNode.id = "Device" + deviceCount;
-                    inputNode.value = BLEDeviceList[deviceCount].name;
-                    node.appendChild(inputNode);
-                    list.appendChild(node);
 
-                    window.document.getElementById("Device" + deviceCount).addEventListener('click',onDeviceClicked(deviceCount));
-                }
-            });
-    };
-
-    var bluetoothSelectorClosed = function(){
-        if (selectedBLEDevice === null){
-            return;
-        }
-        connectToBLE(selectedBLEDevice, startPollBLE);
-    };
     function getHummingbirdType() {
         isDuo = true;
         if(connection == -1) {
@@ -117,7 +85,7 @@
         for (var i = 2; i<bytes.length; i++){
             bytes[i] = 0;
         }
-        id = 0;
+        var id = 0;
         chrome.hid.send(connection, id, bytes.buffer, function () {
             if (chrome.runtime.lastError) {
                 enableIOControls(false);
@@ -199,7 +167,6 @@
                     chrome.hid.send(connection, id, bytes.buffer, function () {
                         if (chrome.runtime.lastError) {
                             enableIOControls(false);
-                            return;
                         }
                     });
                 }
@@ -253,7 +220,6 @@
                 chrome.hid.send(connection, id, bytes.buffer, function () {
                     if (chrome.runtime.lastError) {
                         enableIOControls(false);
-                        return;
                     }
                 });
             }
@@ -293,8 +259,7 @@
     //the information is converted there
     var recvSensors = function () {
         chrome.hid.receive(connection, function (num, data) {
-            var lastError = chrome.runtime.lastError;
-            if (lastError) {
+            if (chrome.runtime.lastError) {
                 connection = -1;
                 enableIOControls(false);
                 return;
@@ -319,6 +284,7 @@
         if(isDisconnectedInArduinoMode && ioEnabled === false){//disconnected but arduino mode found
             ui.disconnected.style.display = 'none';
             ui.connected.style.display = 'none';
+            ui.bluetooth.style.display = 'none';
             ui.arduino.style.display = 'inline';
         }
         else{ //no arduino mode
@@ -327,10 +293,18 @@
             if(isDuo){ //device may be connected, if it is, its a duo
                 ui.connected.style.display = ioEnabled ? 'inline' : 'none';
                 ui.uno.style.display = 'none';
+                ui.bluetooth.style.display = 'none';
             }
-            else{ //device may be connected, if it is, its not a duo
+            else if(!isBluetoothConnection){ //device may be connected, if it is, its not a duo or a BLE
                 ui.uno.style.display = ioEnabled ? 'inline' : 'none';
                 ui.connected.style.display = 'none';
+                ui.bluetooth.style.display = 'none';
+            }
+            else{ //BLE
+                ui.disconnected.style.display = 'none';
+                ui.connected.style.display = 'none';
+                ui.arduino.style.display = 'none';
+                ui.bluetooth.style.display = ioEnabled ? 'inline' : 'none';
             }
         }
         if (!ioEnabled && httpRunning){
@@ -340,7 +314,6 @@
           motors = [-1,-1];
           servos = [-1,-1,-1,-1];
         }
-        
     };
 
     var recvSensorsBLE = function(){
@@ -368,27 +341,25 @@
             for (var i = 0; i < knownDevices.length; i++) {
                 var knownDevice = knownDevices[i];
                 if (knownDevice.uuids !== undefined) {
-                    console.log("Known device: " + knownDevice.name);
-                    console.log("With UUIDS: " + knownDevice.uuids);
                     if (knownDevice.uuids.indexOf(BLEServiceUUID) > -1) {
-                        console.log("Hummingbird found!    " + knownDevice.name);
                         BLEDeviceList.push(knownDevice);
-                        ui.bluetooth.style.display = 'inline';
+                        if(knownDevice.paired){
+                            pairedBLEDevice = knownDevice;
+                            connectToBLE();
+                            return;
+                        }
                     }
                 }
             }
         });
     };
-    var haltDiscovery = function(){
-      console.log("halting discovery\n");
-        chrome.bluetooth.getAdapterState(function(adapterInfo){
-            if(adapterInfo.powered && adapterInfo.discovering){
-                chrome.bluetooth.stopDiscovery();
-            }
-        });
-    };
-    var connectToBLE = function(device, callback){
-        chrome.bluetooth.connect(device.address, false, function(){
+
+    var connectToBLE = function(callback){
+        if (pairedBLEDevice === null){
+            setTimeout(enumerateBLEDevices(), 1000);
+            return;
+        }
+        chrome.bluetooth.connect(pairedBLEDevice.address, false, function(){
             //connected
             chrome.bluetoothLowEnergy.getService(BLEServiceUUID,function(service){
                 chrome.bluetoothLowEnergy.getCharacteristic(BLEServiceUUIDRX, function(RXchar){
@@ -397,7 +368,7 @@
                         txID = TXchar;
                         isBluetoothConnection = true;
                         enableIOControls(true);
-                        haltDiscovery();
+                        startPollBLE();
                         callback();
                     });
                 });
@@ -420,11 +391,13 @@
             recvSensorsBLE();
         });
     };
-    chrome.bluetooth.onDeviceAdded.addListener(function(deviceFound){
-        console.log("found a bluetooth: " + deviceFound.name);
-        if(deviceFound.uuids.indexOf(BLEServiceUUID) > -1) {
-            BLEDeviceList.push(deviceFound);
-            ui.bluetooth.style.display = 'inline';
+
+    chrome.bluetooth.onDeviceRemoved.addListener(function(deviceRemoved){
+        if (deviceRemoved === pairedBLEDevice) {
+            enableIOControls(false);
+            isBluetoothConnection = false;
+            pairedBLEDevice = null;
+            enumerateBLEDevices();
         }
     });
 
@@ -505,13 +478,13 @@
     };
 
     
-    //-------------------------------------------------------------------------
-    //http server stuff--------------------------------------------------------
-    //-------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------------------------
+    //http server stuff------------------------------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------------------------
     //This code is for accepting http requests to control the hummingbird
     //while the above code is for javascript communications with this app
     //to control the hummingbird
-    //-------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------------------------
     var httpRunning = false;
     var tcpServer = chrome.sockets.tcpServer;
     var tcpSocket = chrome.sockets.tcp;
