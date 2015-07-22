@@ -358,7 +358,7 @@
             setTimeout(enumerateBLEDevices(), 1000);
             return;
         }
-        chrome.bluetoothLowEnergy.connect(pairedBLEDevice.address, false, function(){
+        chrome.bluetoothLowEnergy.connect(pairedBLEDevice.address, function(){
             //connected
             chrome.bluetoothLowEnergy.getService(BLEServiceUUID,function(service){
                 chrome.bluetoothLowEnergy.getCharacteristic(BLEServiceUUIDRX, function(RXchar){
