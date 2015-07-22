@@ -69,10 +69,10 @@
     
     var isDuo = true;
 
-    function clearQueue() {
+    function clearQueue(callback) {
         chrome.hid.receive(connection, function (num, data) {
-            if (chrome.runtime.lastError) {
-            }
+            if (chrome.runtime.lastError) {}
+            callback();
         });
     }
 
@@ -357,19 +357,24 @@
     var enumerateBLEDevices = function() {
       console.log("looking at BLE!\n");
         //first look at devices I know
-        chrome.bluetooth.getDevices(function(knownDevices){
-            for (var i = 0; i < knownDevices.length; i++) {
-                var knownDevice = knownDevices[i];
-                if (knownDevice.uuids !== undefined) {
-                    if (knownDevice.uuids.indexOf(BLEServiceUUID) > -1) {
-                        if(knownDevice.paired){
-                            pairedBLEDevice = knownDevice;
+        chrome.bluetooth.getAdapterState(function(adapterInfo){
+            if (adapterInfo.available && adapterInfo.powered) {
+                chrome.bluetooth.getDevices(function (knownDevices) {
+                    for (var i = 0; i < knownDevices.length; i++) {
+                        var knownDevice = knownDevices[i];
+                        if (knownDevice.uuids !== undefined) {
+                            if (knownDevice.uuids.indexOf(BLEServiceUUID) > -1) {
+                                if (knownDevice.paired) {
+                                    pairedBLEDevice = knownDevice;
+                                }
+                            }
                         }
                     }
-                }
+                    connectToBLE();
+                });
             }
-            connectToBLE();
         });
+
     };
 
     var connectToBLE = function(callback){
@@ -517,17 +522,17 @@
             return;
         }
         connection = connectInfo.connectionId;
-        clearQueue();
-        setTimeout(function(){
-          getHummingbirdType(function(){
-              //so we have enough time for getHummingbirdType to finish
-              setTimeout(function(){
-                  enableIOControls(true);
-                  pollSensors();
-              }, 250);
-          });
-        }, 100);//timeout gives us time to actually connect before we ask for type
-
+        clearQueue(function(){
+            setTimeout(function(){
+                getHummingbirdType(function(){
+                    //so we have enough time for getHummingbirdType to finish
+                    setTimeout(function(){
+                        enableIOControls(true);
+                        pollSensors();
+                    }, 250);
+                });
+            }, 100);//timeout gives us time to actually connect before we ask for type
+        });
     };
     //connects to non-null devices in device map
     var connect = function () {
