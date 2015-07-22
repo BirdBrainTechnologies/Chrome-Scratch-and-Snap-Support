@@ -360,16 +360,37 @@
         }
         chrome.bluetoothLowEnergy.connect(pairedBLEDevice.address, function(){
             //connected
-            chrome.bluetoothLowEnergy.getService(BLEServiceUUID,function(service){
-                chrome.bluetoothLowEnergy.getCharacteristic(BLEServiceUUIDRX, function(RXchar){
-                    rxID = RXchar;
-                    chrome.bluetoothLowEnergy.getCharacteristic(BLEServiceUUIDTX, function(TXchar){
-                        txID = TXchar;
-                        isBluetoothConnection = true;
-                        enableIOControls(true);
-                        startPollBLE();
-                        callback();
-                    });
+            console.log("connected");
+            chrome.bluetoothLowEnergy.getServices(pairedBLEDevice.address, function(services){
+                var service;
+                for (var i = 0; i < services.length; i++){
+                    if (services[i].uuid = BLEServiceUUID){
+                        service = services[i];
+                        break;
+                    }
+                }
+                if(service === null){
+                    console.log("couldn't find UART");
+                    return;
+                } else
+                    console.log("UART");
+                chrome.bluetoothLowEnergy.getCharacteristics(service.instanceId, function (characteristics) {
+                    txID = null;
+                    rxID = null;
+                    for (var i = 0; i < characteristics.length; i++){
+                        if (characteristics[i].uuid = BLEServiceUUIDRX){
+                            rxID = characteristics[i];
+                        }
+                        if (characteristics[i].uuid = BLEServiceUUIDTX){
+                            txID = characteristics[i];
+                        }
+                        if(txID !== null && rxID !== null){
+                            isBluetoothConnection = true;
+                            enableIOControls(true);
+                            startPollBLE();
+                            callback();
+                        }
+                    }
                 });
             });
         });
@@ -396,6 +417,8 @@
             enableIOControls(false);
             isBluetoothConnection = false;
             pairedBLEDevice = null;
+            txID = null;
+            rxID = null;
             enumerateBLEDevices();
         }
     });
