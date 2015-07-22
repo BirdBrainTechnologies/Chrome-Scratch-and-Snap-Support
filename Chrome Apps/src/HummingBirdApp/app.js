@@ -106,9 +106,11 @@
                     if(data_array[0] === 0x03 && data_array[1] === 0x00){
                         console.log("isDuo");
                         isDuo = true;
-                    } else
-                    {
-                        console.log("Uno, got response: " + data_array);
+                    } else {
+                        console.log("Uno, got response: ");
+                        for(var i = 0; i < data_array.length; i++){
+                            console.log(data_array[i]);
+                        }
                         isDuo = false;
                     }
                     callback();
