@@ -69,10 +69,9 @@
     
     var isDuo = true;
 
-    function clearQueue(callback) {
+    function clearQueue() {
         chrome.hid.receive(connection, function (num, data) {
             if (chrome.runtime.lastError) {}
-            callback();
         });
     }
 
@@ -110,12 +109,15 @@
                     }
                     var data_array = new Uint8Array(data);
                     if(data_array[0] === 0x03 && data_array[1] === 0x00){
-                        console.log("isDuo");
+                        console.log("isDuo: ");
+                        for(var j = 0; j < data_array.length; j++){
+                            console.log(data_array[j]);
+                        }
                         isDuo = true;
                     } else {
                         console.log("Uno, got response: ");
-                        for(var i = 0; i < data_array.length; i++){
-                            console.log(data_array[i]);
+                        for(var k = 0; k < data_array.length; k++){
+                            console.log(data_array[k]);
                         }
                         isDuo = false;
                     }
@@ -522,17 +524,15 @@
             return;
         }
         connection = connectInfo.connectionId;
-        clearQueue(function(){
-            setTimeout(function(){
-                getHummingbirdType(function(){
-                    //so we have enough time for getHummingbirdType to finish
-                    setTimeout(function(){
-                        enableIOControls(true);
-                        pollSensors();
-                    }, 250);
-                });
-            }, 100);//timeout gives us time to actually connect before we ask for type
-        });
+        setTimeout(function () {
+            getHummingbirdType(function () {
+                //so we have enough time for getHummingbirdType to finish
+                setTimeout(function () {
+                    enableIOControls(true);
+                    pollSensors();
+                }, 250);
+            });
+        },100);//timeout gives us time to actually connect before we ask for type
     };
     //connects to non-null devices in device map
     var connect = function () {
