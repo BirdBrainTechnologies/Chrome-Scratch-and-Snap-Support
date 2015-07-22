@@ -71,7 +71,6 @@
     var isDuo = true;
 
     function getHummingbirdType(callback) {
-        isDuo = true;
         if(connection == -1) {
             return;
         }
@@ -298,6 +297,7 @@
         else{ //no arduino mode
             ui.arduino.style.display = 'none';
             ui.disconnected.style.display = ioEnabled ? 'none' : 'inline';
+
             if(isDuo){ //device may be connected, if it is, its a duo
                 ui.connected.style.display = ioEnabled ? 'inline' : 'none';
                 ui.uno.style.display = 'none';
@@ -423,6 +423,7 @@
     };
 
     var startPollBLE = function(){
+        console.log("starting BLE polling");
         var bytes = new Uint8Array(8);
         bytes[0] = 'G'.charCodeAt(0);
         bytes[1] = '6'.charCodeAt(0);
