@@ -85,24 +85,12 @@
             return;
         }
         var bytes = new Uint8Array(8);
-        bytes[0] = 'R'.charCodeAt(0);
-        for (var i = 1; i<bytes.length; i++){
-            bytes[i] = 0;
-        }
-        chrome.hid.send(connection, id, bytes.buffer, function () {
-            if (chrome.runtime.lastError) {
-                connection = -1;
-                enableIOControls(false);
-                callback();
-                return;
-            }
-        
-        bytes = new Uint8Array(8);
         bytes[0] = 'G'.charCodeAt(0);
         bytes[1] = '4'.charCodeAt(0);
-        for (var j = 2; j<bytes.length; j++){
-            bytes[j] = 0;
+        for (var i = 2; i<(bytes.length - 1); i++){
+            bytes[i] = 0;
         }
+        bytes[7] = 'G'.charCodeAt(0);
         var id = 0;
         chrome.hid.send(connection, id, bytes.buffer, function () {
             if (chrome.runtime.lastError) {
@@ -137,7 +125,6 @@
                     callback();
                 });
             },100);
-        });
         });
     }
 
