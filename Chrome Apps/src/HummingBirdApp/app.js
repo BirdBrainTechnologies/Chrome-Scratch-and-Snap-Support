@@ -101,6 +101,7 @@
             }
             setTimeout(function(){
               console.log("sent request for type");
+              
                 chrome.hid.receive(connection, function (num, data) {
                     if (chrome.runtime.lastError) {
                         connection = -1;
@@ -109,11 +110,16 @@
                         return;
                     }
                     var data_array = new Uint8Array(data);
+                    if(data_array[7] !== 'G'.charCodeAt(0)){
+                       chrome.hid.receive(connection, function (num, data) {
+                    if (chrome.runtime.lastError) {
+                        connection = -1;
+                        enableIOControls(false);
+                        callback();
+                        return;
+                    }
+                    var data_array = new Uint8Array(data);
                     if(data_array[0] === 0x03 && data_array[1] === 0x00){
-                        console.log("isDuo: ");
-                        for(var j = 0; j < data_array.length; j++){
-                            console.log(data_array[j]);
-                        }
                         isDuo = true;
                     } else {
                         console.log("Uno, got response: ");
@@ -124,6 +130,19 @@
                     }
                     callback();
                 });
+                    }
+                    if(data_array[0] === 0x03 && data_array[1] === 0x00){
+                        isDuo = true;
+                    } else {
+                        console.log("Uno, got response: ");
+                        for(var k = 0; k < data_array.length; k++){
+                            console.log(data_array[k]);
+                        }
+                        isDuo = false;
+                    }
+                    callback();
+                });
+                
             },100);
         });
     }
