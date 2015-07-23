@@ -253,7 +253,7 @@
             }
             var id = 0;
             if (isBluetoothConnection) {
-                sendMessageBLE(bytes.buffer);
+                sendMessageBLE(bytes.buffer, function(){});
 
             } else {
                 chrome.hid.send(connection, id, bytes.buffer, function () {
@@ -333,7 +333,7 @@
             ui.arduino.style.display = 'none';
             ui.disconnected.style.display = ioEnabled ? 'none' : 'inline';
 
-            if (isDuo) { //device may be connected, if it is, its a duo
+            if (isDuo && !isBluetoothConnection) { //device may be connected, if it is, its a duo
                 ui.connected.style.display = ioEnabled ? 'inline' : 'none';
                 ui.uno.style.display = 'none';
                 ui.bluetooth.style.display = 'none';
