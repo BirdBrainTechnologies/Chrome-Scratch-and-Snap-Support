@@ -364,8 +364,8 @@
         setTimeout(function () {
             console.log("got some sensor stuff");
             chrome.bluetoothLowEnergy.readCharacteristicValue(rxID.instanceId, function (characteristic) {
-                rxID = characteristic;
-                var data_array = new Uint8Array(rxID.value);
+                //rxID = characteristic;
+                var data_array = new Uint8Array(characteristic.value);
 
                 for (var a = 0; a < data_array.length; a++){
                     console.log(data_array[a]);
