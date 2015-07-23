@@ -382,6 +382,8 @@
                 }
             });
         }, 50);
+        if (pairedBLEDevice !== null)
+            setTimeout(recvSensorsBLE, 100);
     };
 
     var enumerateBLEDevices = function () {
