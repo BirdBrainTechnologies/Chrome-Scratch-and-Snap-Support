@@ -300,7 +300,6 @@
     //In the scratch and snap plugins created to be used with this extension,
     //the information is converted there
     var recvSensors = function () {
-        console.log("Got sensor stuff");
         chrome.hid.receive(connection, function (num, data) {
             if (chrome.runtime.lastError) {
                 connection = -1;
@@ -309,9 +308,6 @@
             }
 
             var data_array = new Uint8Array(data);
-            for (var a = 0; a < data_array.length; a++){
-                console.log(data_array[a]);
-            }
             for (var i = 0; i < 4; i++) { //retrieves and stores all sensor values
                 sensor_nums[i] = data_array[i];
             }
@@ -366,9 +362,15 @@
 
     var recvSensorsBLE = function () {
         setTimeout(function () {
+            console.log("got some sensor stuff");
             chrome.bluetoothLowEnergy.readCharacteristicValue(rxID.instanceId, function (characteristic) {
                 rxID = characteristic;
                 var data_array = new Uint8Array(rxID.value);
+
+                for (var a = 0; a < data_array.length; a++){
+                    console.log(data_array[a]);
+                }
+
                 for (var i = 0; i < 4; i++) { //retrieves and stores all sensor values
                     sensor_nums[i] = data_array[i];
                 }
