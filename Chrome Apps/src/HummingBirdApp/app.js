@@ -395,7 +395,7 @@
                             }
                         }
                     }
-                    connectToBLE();
+                    connectToBLE(function(){});
                 });
             }
         });
@@ -446,6 +446,7 @@
                             txID = characteristics[i];
                         }
                         if (txID !== null && rxID !== null) {
+                            console.log("characteristics");
                             isBluetoothConnection = true;
                             connection = 1;
                             enableIOControls(true);
