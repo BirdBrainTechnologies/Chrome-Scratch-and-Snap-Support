@@ -1,5 +1,8 @@
 (function () {
   
+  var pause_between_messages = 10;
+  var pause_polling = 100;
+  
   function openSnap(){
     var radios = document.getElementsByName('level');
 
@@ -10,7 +13,7 @@
             });
             break;
         }
-}
+    }
     
   }
   function openScratch(){
@@ -40,6 +43,12 @@
         obs1: 0,
         obs2: 0
     };
+    //if we fail at an operation to the finch
+    function handleError(){
+      connection = -1;
+      enableIOControls(false);
+    } 
+    
     //creates the initial window for the app, adds listeners for when a connection
     //is made, and looks for the finch
     var initializeWindow = function () {
@@ -58,9 +67,7 @@
         document.getElementById("scratchButton").addEventListener('click',openScratch);
         enumerateDevices();
     };
-
     var finchPort;
-
     //when a connection is made to this app
     var onConnect = function (port) {
         finchPort = port;
@@ -74,9 +81,9 @@
             //the message is asking for the status of the finch (connected or disconnected)
             if (request.message === "STATUS") {
                 if (connection === -1) //not connected
-                    sendResponse({status: false}); //send status to Scratch
+                    port.postMessage({status: false}); //send status to Scratch
                 else {
-                    sendResponse({status: true});
+                    port.postMessage({status: true});
                 }
             }
             //the message is asking for tts
@@ -85,7 +92,7 @@
             }
             //the message is asking for sensor information
             else if (request.message === "POLL") {
-                sendResponse({
+                finchPort.postMessage({
                     temperature: sensor_nums.temperature,
                     light1: sensor_nums.light1,
                     light2: sensor_nums.light2,
@@ -110,47 +117,12 @@
                 }
                 chrome.hid.send(connection, 0, bytes.buffer, function () {
                     if (chrome.runtime.lastError) {
-                        enableIOControls(false);
+                        handleError();
                         return;
                     }
                 });
             }
         });
-    };
-
-    //this is called on a report recieved from the finch, it figures out
-    //what sensor the report is about and saves it
-    //NOTE: calculations are already made to convert the raw sensor data
-    //into usable information. Temperature is in Celcius.
-    var sortMessages = function (data) {
-        var data_array = new Uint8Array(data);
-        if (data_array[7] === "T".charCodeAt()) {
-            sensor_nums.temperature = Math.round(((data_array[0] - 127) / 2.4 + 25) * 10) / 10;
-        }
-        else if (data_array[7] === "L".charCodeAt()) {
-            sensor_nums.light1 = Math.round(data_array[0] / 2.55);
-            sensor_nums.light2 = Math.round(data_array[1] / 2.55);
-        }
-        else if (data_array[7] === "I".charCodeAt()) {
-            sensor_nums.obs1 = data_array[0];
-            sensor_nums.obs2 = data_array[1];
-        }
-        else if (data_array[0] === 153) {
-            var newdata = Array(3);
-            for (var i = 1; i < 4; i++) {
-                if (data_array[i] > 0x1F)
-                    newdata[i - 1] = (data_array[i] - 64) / 32 * 1.5;
-                else
-                    newdata[i - 1] = data_array[i] / 32 * 1.5;
-            }
-            sensor_nums.xAcc = Math.round(newdata[0] * 10) / 10;
-            sensor_nums.yAcc = Math.round(newdata[1] * 10) / 10;
-            sensor_nums.zAcc = Math.round(newdata[2] * 10) / 10;
-        }
-
-        if (finchPort !== undefined) {
-            finchPort.postMessage(sensor_nums);
-        }
     };
 
     //this is what is called when a message is sent directly to this app
@@ -194,93 +166,110 @@
             }
             chrome.hid.send(connection, 0, bytes.buffer, function () {
                 if (chrome.runtime.lastError) {
-                  enableIOControls(false);
+                  handleError();
                   return;
                 }
             });
         }
     };
 
-    var pollSensors = function(){
+    //this is called on a report recieved from the finch, it figures out
+    //what sensor the report is about and saves it
+    //NOTE: calculations are already made to convert the raw sensor data
+    //into usable information. Temperature is in Celcius.
+    var sortMessages = function (data) {
+        var data_array = new Uint8Array(data);
+        if (data_array[7] === "T".charCodeAt()) {
+            sensor_nums.temperature = Math.round(((data_array[0] - 127) / 2.4 + 25) * 10) / 10;
+        }
+        else if (data_array[7] === "L".charCodeAt()) {
+            sensor_nums.light1 = Math.round(data_array[0] / 2.55);
+            sensor_nums.light2 = Math.round(data_array[1] / 2.55);
+        }
+        else if (data_array[7] === "I".charCodeAt()) {
+            sensor_nums.obs1 = data_array[0];
+            sensor_nums.obs2 = data_array[1];
+        }
+        else if (data_array[0] === 153) {
+            var newdata = Array(3);
+            for (var i = 1; i < 4; i++) {
+                if (data_array[i] > 0x1F)
+                    newdata[i - 1] = (data_array[i] - 64) / 32 * 1.5;
+                else
+                    newdata[i - 1] = data_array[i] / 32 * 1.5;
+            }
+            sensor_nums.xAcc = Math.round(newdata[0] * 10) / 10;
+            sensor_nums.yAcc = Math.round(newdata[1] * 10) / 10;
+            sensor_nums.zAcc = Math.round(newdata[2] * 10) / 10;
+        }
+
+        if (finchPort !== undefined) {
+            finchPort.postMessage(sensor_nums);
+        }
+    };
+
+    function makeRequest(c){
         var bytes = new Uint8Array(8);
         //temperature
-        bytes[0] = "T".charCodeAt();
+        bytes[0] = c.charCodeAt();
         for (var i = 1; i < bytes.length - 1; ++i) {
             bytes[i] = 0;
         }
-        bytes[7] = "T".charCodeAt();
-        chrome.hid.send(connection, 0, bytes.buffer, function () {
+        bytes[7] = c.charCodeAt();
+        return bytes.buffer;
+    }
+
+    var pollSensors = function(){
+        //temperature
+        chrome.hid.send(connection, 0, makeRequest("T"), function () {
             if (chrome.runtime.lastError) {
-                connection = -1;
-                enableIOControls(false);
+                handleError();
                 return;
             }
             setTimeout(function(){
                 pollForSensors();
-                var bytes = new Uint8Array(8);
                 //light sensors
-                bytes[0] = "L".charCodeAt();
-                for (var i = 1; i < bytes.length - 1; ++i) {
-                    bytes[i] = 0;
-                }
-                bytes[7] = "L".charCodeAt();
-                chrome.hid.send(connection, 0, bytes.buffer, function () {
+                chrome.hid.send(connection, 0, makeRequest("L"), function () {
                     if (chrome.runtime.lastError) {
-                        connection = -1;
-                        enableIOControls(false);
+                        handleError();
                         return;
                     }
                     setTimeout(function(){
                         pollForSensors();
-                        var bytes = new Uint8Array(8);
                         //obstacle sensors
-                        bytes[0] = "I".charCodeAt();
-                        for (var i = 1; i < bytes.length - 1; ++i) {
-                            bytes[i] = 0;
-                        }
-                        bytes[7] = "I".charCodeAt();
-                        chrome.hid.send(connection, 0, bytes.buffer, function () {
+                        chrome.hid.send(connection, 0, makeRequest("I"), function () {
                             if (chrome.runtime.lastError) {
-                                connection = -1;
-                                enableIOControls(false);
+                                handleError();
                                 return;
                             }
                             setTimeout(function(){
                                 pollForSensors();
-                                var bytes = new Uint8Array(8);
                                 //accelerometer info
-                                bytes[0] = "A".charCodeAt();
-                                for (var i = 1; i < bytes.length - 1; ++i) {
-                                    bytes[i] = 0;
-                                }
-                                bytes[7] = "A".charCodeAt();
-                                chrome.hid.send(connection, 0, bytes.buffer, function () {
+                                chrome.hid.send(connection, 0, makeRequest("A"), function () {
                                     if (chrome.runtime.lastError) {
-                                        connection = -1;
-                                        enableIOControls(false);
+                                        handleError();
                                         return;
                                     }
                                     setTimeout(function(){
                                         pollForSensors();
-                                        setTimeout(pollSensors,100);
-                                    },10);   
+                                        setTimeout(pollSensors, pause_polling);
+                                    }, pause_between_messages);   
                                 });
-                            },10);
+                            }, pause_between_messages);
                         });
-                    },10);
+                    }, pause_between_messages);
                 });
-            },10);
+            }, pause_between_messages);
         });
     };
 
-    //this function reads reports send from the finch 20 times a second and then
+    //this function reads reports send from the finch and then
     //parses them to see what information they contain
     //messages are identified by the last byte.
     var pollForSensors = function () {
         chrome.hid.receive(connection, function (id, data) {
             if (chrome.runtime.lastError) {
-                connection = -1;
-                enableIOControls(false);
+                handleError();
                 return;
             }
             sortMessages(data);
