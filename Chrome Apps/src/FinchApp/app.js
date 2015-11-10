@@ -1,7 +1,7 @@
 (function () {
   
-  var pause_between_messages = 10;
-  var pause_polling = 100;
+  var pause_between_messages = 1;
+  var pause_polling = 50;
   
   function openSnap(){
     var radios = document.getElementsByName('level');
@@ -207,7 +207,7 @@
             finchPort.postMessage(sensor_nums);
         }
     };
-
+    //Takes a character and turns it into a proper request array buffer
     function makeRequest(c){
         var bytes = new Uint8Array(8);
         //temperature
@@ -218,7 +218,7 @@
         bytes[7] = c.charCodeAt();
         return bytes.buffer;
     }
-
+    //sends a request for each sensor to the finch then reads response
     var pollSensors = function(){
         //temperature
         chrome.hid.send(connection, 0, makeRequest("T"), function () {
