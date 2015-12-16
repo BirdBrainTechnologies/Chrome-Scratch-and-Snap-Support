@@ -12,6 +12,9 @@
     var onMsgHummingbird = function (msg) {
         sensorvalue = msg;
     };
+    function fitTo255(num) {
+        return Math.max(Math.min(num,255.0),0.0);
+    }
     //gets the connection status fo the hummingbird
     var getHummingbirdStatus = function () {
         console.log("status");
@@ -55,11 +58,11 @@
         var direction;
         if (velocity < 0) {
             direction = "1".charCodeAt(0);
-            velocity = Math.floor(velocity * -2.55);
+            velocity = fitTo255(Math.floor(velocity * -2.55));
         }
         else {
             direction = "0".charCodeAt(0);
-            velocity = Math.floor(velocity * 2.55);
+            velocity = fitTo255(Math.floor(velocity * 2.55));
         }
         var report = {
             message: "M".charCodeAt(0),
@@ -73,9 +76,9 @@
     ext.setTriLed = function (portnum, rednum, greennum, bluenum) {
         var realPort = portnum - 1; //convert from zero-indexed
         var portString = realPort.toString(); //convert to string
-        var realRed = Math.floor(rednum * 2.55);
-        var realGreen = Math.floor(greennum * 2.55);
-        var realBlue = Math.floor(bluenum * 2.55);
+        var realRed = fitTo255(Math.floor(rednum * 2.55));
+        var realGreen = fitTo255(Math.floor(greennum * 2.55));
+        var realBlue = fitTo255(Math.floor(bluenum * 2.55));
         var report = {
             message: "O".charCodeAt(0),
             port: portString.charCodeAt(0),
@@ -89,7 +92,7 @@
     ext.setLed = function (portnum, intensitynum) {
         var realPort = portnum - 1;
         var portString = realPort.toString();
-        var realIntensity = Math.floor(intensitynum * 2.55);
+        var realIntensity = fitTo255(Math.floor(intensitynum * 2.55));
         var report = {
             message: "L".charCodeAt(0),
             port: portString.charCodeAt(0),
@@ -101,7 +104,7 @@
     ext.setServo = function (portnum, ang) {
         var realPort = portnum - 1; //convert to zero-indexed number
         var portString = realPort.toString(); //convert to string
-        var realAngle = Math.floor(ang * 2.35);
+        var realAngle = Math.max(Math.min((ang * 1.25)), 225.0), 0.0);
         var report = {
             message: "S".charCodeAt(0),
             port: portString.charCodeAt(0),
@@ -113,7 +116,7 @@
     ext.setVibration = function (portnum, intensitynum) {
         var realPort = portnum - 1; //convert to zero-indexed number
         var portString = realPort.toString(); //convert to string
-        var realIntensity = Math.floor(intensitynum * 2.55);
+        var realIntensity = fitTo255(Math.floor(intensitynum * 2.55));
         var report = {
             message: "V".charCodeAt(0),
             port: portString.charCodeAt(0),
@@ -159,14 +162,14 @@
           }
           else { //formula based on mathematical regression
             sensor_val_square = reading * reading;
-            distance = 
+            distance =
                       206.76903754529479-9.3402257299483011*reading
                     + 0.19133513242939543*sensor_val_square
-                    - 0.0019720997497951645*sensor_val_square * reading 
+                    - 0.0019720997497951645*sensor_val_square * reading
                     + 9.9382154479167215*Math.pow(10, -6)*sensor_val_square*sensor_val_square
                     - 1.9442731496914311*Math.pow(10, -8)*sensor_val_square*sensor_val_square*reading;
             return parseInt(distance);
-        }  
+        }
       }
     };
 

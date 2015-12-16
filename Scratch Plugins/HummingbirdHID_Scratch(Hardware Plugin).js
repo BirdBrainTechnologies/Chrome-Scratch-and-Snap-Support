@@ -27,7 +27,9 @@
         device.write(bytes.buffer);
         sensorData = new Uint8Array(device.read(8));
     };
-
+    function fitTo255(num) {
+        return Math.max(Math.min(num,255.0),0.0);
+    }
     ext._deviceRemoved = function(dev) {
         if(device != dev)
             return;
@@ -51,7 +53,7 @@
         if(poller)
             poller = clearInterval(poller);
     };
-    
+
     // Status reporting code
     // Use this to report missing hardware, plugin or unsupported browser
     ext._getStatus = function() {
@@ -67,11 +69,11 @@
         var direction;
         if(velocity < 0){
             direction = "1".charCodeAt(0);
-            velocity = Math.floor(velocity * -2.55);
+            velocity =  fitTo255(Math.floor(velocity * -2.55));
         }
         else{
             direction = "0".charCodeAt(0);
-            velocity = Math.floor(velocity*2.55);
+            velocity =  fitTo255(Math.floor(velocity*2.55));
         }
         var bytes = new Uint8Array(9);
         bytes[0] = 0;
@@ -84,12 +86,12 @@
         }
         device.write(bytes.buffer);
     };
-    ext.setTriLed = function(portnum, rednum,greennum,bluenum){
+    ext.setTriLed = function(portnum, rednum, greennum, bluenum){
         var realPort = portnum-1; //convert from zero-indexed
         var portString = realPort.toString(); //convert to string
-        var realRed = Math.floor(rednum*2.55);
-        var realGreen = Math.floor(greennum*2.55);
-        var realBlue = Math.floor(bluenum*2.55);
+        var realRed = fitTo255(Math.floor(rednum*2.55));
+        var realGreen = fitTo255(Math.floor(greennum*2.55));
+        var realBlue = fitTo255(Math.floor(bluenum*2.55));
 
         var bytes = new Uint8Array(9);
         bytes[0] = 0;
@@ -107,7 +109,7 @@
     ext.setLed = function(portNum, intensity){
         var realPort = portNum - 1;
         var portString = realPort.toString();
-        var realIntensity = Math.floor(intensity*2.55);
+        var realIntensity = fitTo255(Math.floor(intensity*2.55));
         var bytes = new Uint8Array(9);
         bytes[0] = 0;
         bytes[1] = 'L'.charCodeAt(0);
@@ -122,7 +124,7 @@
     ext.setServo = function(portnum, ang){
         var realPort = portnum-1; //convert to zero-indexed number
         var portString = realPort.toString(); //convert to string
-        var realAngle = Math.floor(ang*2.35);
+        var realAngle = Math.max(Math.min((ang * 1.25)), 225.0), 0.0);
 
         var bytes = new Uint8Array(9);
         bytes[0] = 0;
@@ -138,7 +140,7 @@
     ext.setVibration = function(portnum, intensitynum){
         var realPort = portnum-1; //convert to zero-indexed number
         var portString = realPort.toString(); //convert to string
-        var realIntensity = Math.floor(intensitynum*2.55);
+        var realIntensity = fitTo255(Math.floor(intensitynum*2.55));
 
         var bytes = new Uint8Array(9);
         bytes[0] = 0;
@@ -170,9 +172,9 @@
                 var sensor_val_square = reading*reading;
                 distance = sensor_val_square*sensor_val_square*reading*-0.000000000004789
 				               + sensor_val_square*sensor_val_square*0.000000010057143
-				               - sensor_val_square*reading*0.000008279033021 
-				               + sensor_val_square*0.003416264518201 
-				               - reading*0.756893112198934 
+				               - sensor_val_square*reading*0.000008279033021
+				               + sensor_val_square*0.003416264518201
+				               - reading*0.756893112198934
 				               + 90.707167605683000;
             }
             return parseInt(distance);
@@ -193,7 +195,7 @@
         //converts to 0 to 100 scale
         return Math.floor(sensorData[port-1]/2.55);
     };
-    
+
     // Block and block menu descriptions
     var descriptor = {
         blocks: [
