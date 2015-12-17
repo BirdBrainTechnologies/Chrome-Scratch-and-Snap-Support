@@ -124,7 +124,7 @@
     ext.setServo = function(portnum, ang){
         var realPort = portnum-1; //convert to zero-indexed number
         var portString = realPort.toString(); //convert to string
-        var realAngle = Math.max((Math.min((ang * 1.25)), 225.0), 0.0);
+        var realAngle = Math.max(Math.min((ang * 1.25), 225.0), 0.0);
 
         var bytes = new Uint8Array(9);
         bytes[0] = 0;
