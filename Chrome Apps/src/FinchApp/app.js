@@ -48,7 +48,14 @@
       connection = -1;
       enableIOControls(false);
     } 
-    
+    var sendByteArrayUntilSuccess = function(bytes) {
+        chrome.hid.send(connection, 0, bytes.buffer, function () {
+            if (chrome.runtime.lastError) {
+                sendByteArrayUntilSuccess(bytes);
+                return;
+            }
+      });
+    };
     //creates the initial window for the app, adds listeners for when a connection
     //is made, and looks for the finch
     var initializeWindow = function () {
@@ -68,6 +75,7 @@
         enumerateDevices();
     };
     var finchPort;
+    
     //when a connection is made to this app
     var onConnect = function (port) {
         finchPort = port;
@@ -115,12 +123,7 @@
                 for (var i = counter; i < bytes.length; ++i) {
                     bytes[i] = 0;
                 }
-                chrome.hid.send(connection, 0, bytes.buffer, function () {
-                    if (chrome.runtime.lastError) {
-                        handleError();
-                        return;
-                    }
-                });
+                sendByteArrayUntilSuccess(bytes);
             }
         });
     };
@@ -164,12 +167,7 @@
             for (var i = counter; i < bytes.length; ++i) {
                 bytes[i] = 0;
             }
-            chrome.hid.send(connection, 0, bytes.buffer, function () {
-                if (chrome.runtime.lastError) {
-                  handleError();
-                  return;
-                }
-            });
+            sendByteArrayUntilSuccess(bytes);
         }
     };
 

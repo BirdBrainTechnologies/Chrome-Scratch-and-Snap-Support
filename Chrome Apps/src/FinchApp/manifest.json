@@ -1,7 +1,7 @@
 {
 	"name": "Finch Connection App",
 	"manifest_version": 2,
-	"version": "0.7.2",
+	"version": "0.7.3",
     "minimum_chrome_version": "38",
 	"app": {
 		"background": {
