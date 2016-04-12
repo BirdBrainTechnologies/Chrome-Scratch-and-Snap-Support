@@ -1,7 +1,7 @@
 (function () {
   
   var pause_between_messages = 1;
-  var pause_polling = 50;
+  var pause_polling = 200;
   
   function openSnap(){
     var radios = document.getElementsByName('level');
