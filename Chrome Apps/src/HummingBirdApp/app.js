@@ -3,13 +3,13 @@
     function openSnap() {
         //startHTTP();
         chrome.browser.openTab({
-            url: 'http://bit.ly/humming-chrome'
+            url: 'http://snap.berkeley.edu/snapsource/snap.html#cloud:Username=birdbraintech&ProjectName=Hummingbird-Chrome'
         });
     }
 
     function openScratch() {
         chrome.browser.openTab({
-            url: 'http://bit.ly/ScratchXHumm'
+            url: 'http://scratchx.org/?url=http://birdbraintechnologies.github.io/Chrome-Scratch-and-Snap-Support/Scratch%20Plugins/HummingbirdHID_Scratch(Chrome%20Plugin).js#scratch'
         });
     }
 
