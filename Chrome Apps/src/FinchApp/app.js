@@ -18,7 +18,7 @@
   }
   function openScratch(){
     chrome.browser.openTab({
-      url: 'http://bit.ly/ScratchXFinch'
+      url: 'http://scratchx.org/?url=http://birdbraintechnologies.github.io/Chrome-Scratch-and-Snap-Support/Scratch%20Plugins/FinchHID_Scratch(Chrome%20Plugin).js'
     });
   }
   
