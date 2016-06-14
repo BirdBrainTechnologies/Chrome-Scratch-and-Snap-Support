@@ -1,6 +1,7 @@
 (function () {
   
-  var pause_between_messages = 1;
+  var pause_between_messages = 50;
+  var pause_between_read_poll = 10;
   var pause_polling = 200;
   var pause_between_repeated_send = 250;
   
@@ -226,7 +227,6 @@
                 return;
             }
             setTimeout(function(){
-                pollForSensors();
                 //light sensors
                 chrome.hid.send(connection, 0, makeRequest("L"), function () {
                     if (chrome.runtime.lastError) {
@@ -234,7 +234,6 @@
                         return;
                     }
                     setTimeout(function(){
-                        pollForSensors();
                         //obstacle sensors
                         chrome.hid.send(connection, 0, makeRequest("I"), function () {
                             if (chrome.runtime.lastError) {
@@ -242,7 +241,6 @@
                                 return;
                             }
                             setTimeout(function(){
-                                pollForSensors();
                                 //accelerometer info
                                 chrome.hid.send(connection, 0, makeRequest("A"), function () {
                                     if (chrome.runtime.lastError) {
@@ -250,7 +248,6 @@
                                         return;
                                     }
                                     setTimeout(function(){
-                                        pollForSensors();
                                         setTimeout(pollSensors, pause_polling);
                                     }, pause_between_messages);   
                                 });
@@ -261,11 +258,12 @@
             }, pause_between_messages);
         });
     };
+    
 
     //this function reads reports send from the finch and then
     //parses them to see what information they contain
     //messages are identified by the last byte.
-    var pollForSensors = function () {
+    var receiveFromFinch = function () {
         chrome.hid.receive(connection, function (id, data) {
             if (chrome.runtime.lastError) {
                 handleError();
@@ -274,6 +272,12 @@
             sortMessages(data);
         });
     };
+    
+    var getSensors = function() {
+      receiveFromFinch();
+      setTimeout(getSensors, pause_between_messages);
+    };
+    
     //controls the display of the app (showing if the finch is connected or
     //disonnected)
     var enableIOControls = function (ioEnabled) {
@@ -316,6 +320,7 @@
         connection = connectInfo.connectionId;
         enableIOControls(true);
         pollSensors();
+        getSensors();
     };
     //connects to non-null devices in device map
     var connect = function () {
