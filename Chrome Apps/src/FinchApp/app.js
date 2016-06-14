@@ -2,6 +2,7 @@
   
   var pause_between_messages = 1;
   var pause_polling = 200;
+  var pause_between_repeated_send = 250;
   
   function openSnap(){
     var radios = document.getElementsByName('level');
@@ -51,7 +52,7 @@
     var sendByteArrayUntilSuccess = function(bytes) {
         chrome.hid.send(connection, 0, bytes.buffer, function () {
             if (chrome.runtime.lastError) {
-                sendByteArrayUntilSuccess(bytes);
+                setTimeout(sendByteArrayUntilSuccess, pause_between_repeated_send);
                 return;
             }
       });
