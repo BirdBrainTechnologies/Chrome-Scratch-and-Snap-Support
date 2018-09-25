@@ -3,7 +3,7 @@
     function openSnap() {
         //startHTTP();
         chrome.browser.openTab({
-            url: 'http://snap.berkeley.edu/snapsource/snap.html#cloud:Username=birdbraintech&ProjectName=Hummingbird-Chrome'
+            url: 'http://snap.berkeley.edu/snapsource/snap.html#cloud:Username=birdbraintech&ProjectName=Hummingbird-Chrome100'
         });
     }
 
@@ -263,6 +263,9 @@
                     }
                 });
             }
+            // There is no data to send, but the caller may have a callback
+            // to know when the message was processed.
+            sendResponse();
         }
     };
     //this function sends requests to the hummingbird for all of its sensor data
