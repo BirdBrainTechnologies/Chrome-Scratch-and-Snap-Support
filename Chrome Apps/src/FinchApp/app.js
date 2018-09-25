@@ -170,6 +170,9 @@
                 bytes[i] = 0;
             }
             sendByteArrayUntilSuccess(bytes);
+
+            // No data, but the caller might have a callback to be notified
+            sendResponse();
         }
     };
 
