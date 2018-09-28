@@ -20,7 +20,7 @@
   }
   function openScratch(){
     chrome.browser.openTab({
-      url: 'http://scratchx.org/?url=http://birdbraintechnologies.github.io/Chrome-Scratch-and-Snap-Support/Scratch%20Plugins/FinchHID_Scratch(Chrome%20Plugin).js'
+      url: 'http://scratchx.org/?url=http://sky1e.github.io/Chrome-Scratch-and-Snap-Support/Scratch%20Plugins/FinchHID_Scratch(Chrome%20Plugin).js'
     });
   }
   
@@ -37,13 +37,9 @@
     //all the sensor info of the finch
     var sensor_nums = {
         temperature: 0,
-        light1: 0,
-        light2: 0,
-        xAcc: 0,
-        yAcc: 0,
-        zAcc: 0,
-        obs1: 0,
-        obs2: 0
+        obstacles: [0, 0],
+        lights: [0, 0],
+        acceleration: [0, 0, 0],
     };
     //if we fail at an operation to the finch
     function handleError(){
@@ -88,30 +84,47 @@
         });
         // a listener for messages send via this connection
         port.onMessage.addListener(function (request) {
-            //the message is asking for the status of the finch (connected or disconnected)
-            if (request.message === "STATUS") {
-                if (connection === -1) //not connected
-                    port.postMessage({status: false}); //send status to Scratch
-                else {
-                    port.postMessage({status: true});
-                }
-            }
             //the message is asking for tts
-            else if (request.message === "SPEAK") {
+            if (request.message === "SPEAK") {
                 chrome.tts.speak(request.val); //speak phrase using text to speech
             }
-            //the message is asking for sensor information
-            else if (request.message === "POLL") {
-                finchPort.postMessage({
-                    temperature: sensor_nums.temperature,
-                    light1: sensor_nums.light1,
-                    light2: sensor_nums.light2,
-                    xAcc: sensor_nums.xAcc,
-                    yAcc: sensor_nums.yAcc,
-                    zAcc: sensor_nums.zAcc,
-                    obs1: sensor_nums.obs1,
-                    obs2: sensor_nums.obs2
-                });
+            else if (request.message === "MOTOR") {
+                var speeds = request.speeds;
+                var bytes = Uint8Array.of(
+                    "M".charCodeAt(0),
+                    speeds[0] < 0 ? 1 : 0,  // left direction
+                    Math.abs(speeds[0]),    // left speed
+                    speeds[1] < 0 ? 1 : 0,  // right direction
+                    Math.abs(speeds[1]),    // right speed
+                    0, 0, 0                 // Must be a total of 8 values
+                );
+                sendByteArrayUntilSuccess(bytes);
+                finchPort.postMessage({moveSpeeds: speeds});
+            }
+            else if (request.message === "LED") {
+                var values = request.values;
+                var bytes = Uint8Array.of(
+                    "O".charCodeAt(0),
+                    values[0],          // red
+                    values[1],          // green
+                    values[2],          // blue
+                    0, 0, 0, 0
+                );
+                sendByteArrayUntilSuccess(bytes);
+                finchPort.postMessage({LEDs: values});
+            }
+            else if (request.message === "BUZZER") {
+                var value = request.value;
+                var bytes = Uint8Array.of(
+                    "B".charCodeAt(0),
+                    value.time >> 8,
+                    value.time & 0xFF,
+                    value.freq >> 8,
+                    value.freq & 0xFF,
+                    0, 0, 0
+                );
+                sendByteArrayUntilSuccess(bytes);
+                finchPort.postMessage({buzzer: value});
             }
             else { // setting things, no return report
                 var bytes = new Uint8Array(8); //array of bytes to send to Finch
@@ -146,16 +159,7 @@
         }
         //the message is asking for sensor information
         else if (request.message === "POLL") {
-            sendResponse({
-                temperature: sensor_nums.temperature,
-                light1: sensor_nums.light1,
-                light2: sensor_nums.light2,
-                xAcc: sensor_nums.xAcc,
-                yAcc: sensor_nums.yAcc,
-                zAcc: sensor_nums.zAcc,
-                obs1: sensor_nums.obs1,
-                obs2: sensor_nums.obs2
-            });
+            sendResponse(sensor_nums);
         }
         else { // setting things, no return report
             var bytes = new Uint8Array(8); //array of bytes to send to Finch
@@ -186,12 +190,10 @@
             sensor_nums.temperature = Math.round(((data_array[0] - 127) / 2.4 + 25) * 10) / 10;
         }
         else if (data_array[7] === "L".charCodeAt()) {
-            sensor_nums.light1 = Math.round(data_array[0] / 2.55);
-            sensor_nums.light2 = Math.round(data_array[1] / 2.55);
+            sensor_nums.lights = [Math.round(data_array[0] / 2.55), Math.round(data_array[1] / 2.55)];
         }
         else if (data_array[7] === "I".charCodeAt()) {
-            sensor_nums.obs1 = data_array[0];
-            sensor_nums.obs2 = data_array[1];
+            sensor_nums.obstacles = [data_array[0], data_array[1]];
         }
         else if (data_array[0] === 153) {
             var newdata = Array(3);
@@ -201,13 +203,13 @@
                 else
                     newdata[i - 1] = data_array[i] / 32 * 1.5;
             }
-            sensor_nums.xAcc = Math.round(newdata[0] * 10) / 10;
-            sensor_nums.yAcc = Math.round(newdata[1] * 10) / 10;
-            sensor_nums.zAcc = Math.round(newdata[2] * 10) / 10;
+            sensor_nums.acceleration = newdata.map(function(value) {
+                return Math.round(value * 10) / 10;
+            });
         }
 
         if (finchPort !== undefined) {
-            finchPort.postMessage(sensor_nums);
+            finchPort.postMessage({sensors: sensor_nums});
         }
     };
     //Takes a character and turns it into a proper request array buffer

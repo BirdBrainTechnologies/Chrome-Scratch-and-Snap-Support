@@ -9,7 +9,7 @@
 
     function openScratch() {
         chrome.browser.openTab({
-            url: 'http://scratchx.org/?url=http://birdbraintechnologies.github.io/Chrome-Scratch-and-Snap-Support/Scratch%20Plugins/HummingbirdHID_Scratch(Chrome%20Plugin).js#scratch'
+            url: 'http://scratchx.org/?url=http://sky1e.github.io/Chrome-Scratch-and-Snap-Support/Scratch%20Plugins/HummingbirdHID_Scratch(Chrome%20Plugin).js#scratch'
         });
     }
 
@@ -150,6 +150,20 @@
         });
     }
 
+    function sendBytes(bytes) {
+        var id = 0;
+        if (isBluetoothConnection) {
+            sendMessageBLE(bytes.buffer);
+        } else {
+            chrome.hid.send(connection, id, bytes.buffer, function () {
+                if (chrome.runtime.lastError) {
+                    connection = -1;
+                    enableIOControls(false);
+                }
+            });
+        }
+    }
+
     var hummingbirdPort;
     //when a connection is made to this app
     var onConnect = function (port) {
@@ -162,53 +176,92 @@
         //(when the client doesn't open a long
         //term port for communication)
         port.onMessage.addListener(function (request) {
-            //the message is asking for the status of the hummingbird (connected or disconnected)
-            if (request.message === "STATUS") {
-                if (connection === -1) //not connected
-                    sendResponse({status: false, duo: true}); //send status to Scratch
-                else {
-                    if (isDuo)
-                        sendResponse({status: true, duo: true});
-                    else
-                        sendResponse({status: true, duo: false});
-                }
-            }
-            //the message is asking for sensor information
-            else if (request.message === "POLL") {
-                sendResponse({
-                    port1: sensor_nums[0],
-                    port2: sensor_nums[1],
-                    port3: sensor_nums[2],
-                    port4: sensor_nums[3]
-                });
-            }
             //the message is asking for tts
-            else if (request.message === "SPEAK") {
+            if (request.message === "SPEAK") {
                 chrome.tts.speak(request.val); //speak phrase using text to speech
             }
-            else { // setting things on Hummingbird, no return report
-                var bytes = new Uint8Array(8); //array of bytes to send to Hummingbird
-                var counter = 0;
-                for (var prop in request) { //read through request, adding each property to byte array
-                    if (request.hasOwnProperty(prop)) {
-                        bytes[counter] = request[prop];
-                        counter++;
+            else if (request.message === "MOTOR") {
+                var bytes = Uint8Array.of(
+                    'M'.charCodeAt(0),
+                    request.port.toString().charCodeAt(0),
+                    (request.velocity < 0 ? 1 : 0).toString().charCodeAt(),
+                    Math.abs(request.velocity),
+                    0, 0, 0, 0
+                );
+
+                sendBytes(bytes);
+                port.postMessage({
+                    motor: {
+                        velocity: request.velocity,
+                        port: request.port
                     }
-                }
-                for (var i = counter; i < bytes.length; ++i) {
-                    bytes[i] = 0;
-                }
-                var id = 0;
-                if (isBluetoothConnection) {
-                    sendMessageBLE(bytes.buffer);
-                } else {
-                    chrome.hid.send(connection, id, bytes.buffer, function () {
-                        if (chrome.runtime.lastError) {
-                            connection = -1;
-                            enableIOControls(false);
-                        }
-                    });
-                }
+                });
+            }
+            else if (request.message === "TRILED") {
+                var bytes = Uint8Array.of(
+                    'O'.charCodeAt(0),
+                    request.port.toString().charCodeAt(0),
+                    request.intensities[0],
+                    request.intensities[1],
+                    request.intensities[2],
+                    0, 0, 0
+                );
+
+                sendBytes(bytes);
+                port.postMessage({
+                    triLED: {
+                        intensities: request.intensities,
+                        port: request.port
+                    }
+                });
+            }
+            else if (request.message === "LED") {
+                var bytes = Uint8Array.of(
+                    'L'.charCodeAt(0),
+                    request.port.toString().charCodeAt(0),
+                    request.intensity,
+                    0, 0, 0, 0, 0
+                );
+
+                sendBytes(bytes);
+                port.postMessage({
+                    LED: {
+                        intensity: request.intensity,
+                        port: request.port
+                    }
+                });
+            }
+            else if (request.message === "SERVO") {
+                var bytes = Uint8Array.of(
+                    'S'.charCodeAt(0),
+                    request.port.toString().charCodeAt(0),
+                    request.angle,
+                    0, 0, 0, 0, 0
+                );
+
+                sendBytes(bytes);
+                port.postMessage({
+                    servo: {
+                        angle: request.angle,
+                        port: request.port
+                    }
+                });
+            }
+            else if (request.message === "VIBRATION") {
+                var bytes = Uint8Array.of(
+                    'V'.charCodeAt(0),
+                    request.port.toString().charCodeAt(0),
+                    request.intensity,
+                    0, 0, 0, 0, 0
+                );
+
+                sendBytes(bytes);
+                port.postMessage({
+                    vibration: {
+                        intensity: request.intensity,
+                        port: request.port
+                    }
+                });
             }
         });
 
@@ -220,10 +273,7 @@
             if (connection === -1) //not connected
                 sendResponse({status: false}); //send tatus to Scratch
             else {
-                if (isDuo)
-                    sendResponse({status: true, duo: true});
-                else
-                    sendResponse({status: true, duo: false});
+                sendResponse({status: true, duo: isDuo});
             }
         }
         //the message is asking for sensor information
@@ -318,7 +368,7 @@
             //if a port has been opened. this allows for the user of this app
             //to keep track of the updated information
             if (hummingbirdPort !== undefined) {
-                hummingbirdPort.postMessage(sensor_nums);
+                hummingbirdPort.postMessage({sensors: sensor_nums});
             }
         });
     };
@@ -414,7 +464,7 @@
 
     var connectToBLE = function (callback) {
         if (pairedBLEDevice === null) {
-            setTimeout(enumerateBLEDevices(), 1000);
+            setTimeout(enumerateBLEDevices, 1000);
             return;
         }
         chrome.bluetoothLowEnergy.connect(pairedBLEDevice.address, function () {
