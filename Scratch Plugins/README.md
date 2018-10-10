@@ -1,0 +1,1 @@
+Because the files in this directory are directly served by GitHub and changing them could break older versions of the app, some of the files have been moved into their own directory where the file names are the oldest version of the corresponding app that uses that particular file.

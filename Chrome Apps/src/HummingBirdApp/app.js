@@ -9,7 +9,7 @@
 
     function openScratch() {
         chrome.browser.openTab({
-            url: 'http://scratchx.org/?url=http://sky1e.github.io/Chrome-Scratch-and-Snap-Support/Scratch%20Plugins/HummingbirdHID_Scratch(Chrome%20Plugin).js#scratch'
+            url: 'http://scratchx.org/?url=http://sky1e.github.io/Chrome-Scratch-and-Snap-Support/Scratch%20Plugins/HummingbirdHID_Scratch(Chrome%20Plugin)/v0.7.js#scratch'
         });
     }
 
