@@ -6,7 +6,7 @@
     //sensor info
     var sensors = {
         temperature: null,
-        obstacle: new Array(2),
+        obstacles: new Array(2),
         lights: new Array(2),
         acceleration: new Array(3)
     }
@@ -142,52 +142,59 @@
         //the below functions return the sensor information of the finch
         getFinchTemp: function () {
             //returns temperature in Celsius degrees
-            return temperature;
+            return sensors.temperature;
         },
 
         getLeftObstacle: function () {
-            var result = obstacle[0];
-            return result !== 0;
+            return sensors.obstacles[0] !== 0;
         },
 
         getRightObstacle: function () {
-            var result = obstacle[1];
-            return result !== 0;
+            return sensors.obstacles[1] !== 0;
         },
 
         getLeftLight: function () {
-            return lights[0];
+            return sensors.lights[0];
         },
 
         getRightLight: function () {
-            return lights[1];
+            return sensors.lights[1];
         },
 
         getXAcceleration: function () {
-            return acceleration[0];
+            return sensors.acceleration[0];
         },
 
         getYAcceleration: function () {
-            return acceleration[1];
+            return sensors.acceleration[1];
         },
 
         getZAcceleration: function () {
-            return acceleration[2];
+            return sensors.acceleration[2];
         },
         //calculates the orientation of the finch
         getOrientation: function () {
-            if (acceleration[0] > -0.5 && acceleration[0] < 0.5 && acceleration[1] < 0.5 && acceleration[1] > -0.5 && acceleration[2] > 0.65 && acceleration[2] < 1.5)
-                return "level";
-            else if (acceleration[0] > -0.5 && acceleration[0] < 0.5 && acceleration[1] < 0.5 && acceleration[1] > -0.5 && acceleration[2] > -1.5 && acceleration[2] < -0.65)
-                return "upside down";
-            else if (acceleration[0] < 1.5 && acceleration[0] > 0.8 && acceleration[1] > -0.3 && acceleration[1] < 0.3 && acceleration[2] > -0.3 && acceleration[2] < 0.3)
-                return "beak down";
-            else if (acceleration[0] < -0.8 && acceleration[0] > -1.5 && acceleration[1] > -0.3 && acceleration[1] < 0.3 && acceleration[2] > -0.3 && acceleration[2] < 0.3)
-                return "beak up";
-            else if (acceleration[0] > -0.5 && acceleration[0] < 0.5 && acceleration[1] > 0.7 && acceleration[1] < 1.5 && acceleration[2] > -0.5 && acceleration[2] < 0.5)
-                return "left wing down";
-            else if (acceleration[0] > -0.5 && acceleration[0] < 0.5 && acceleration[1] > -1.5 && acceleration[1] < -0.7 && acceleration[2] > -0.5 && acceleration[2] < 0.5)
-                return "right wing down";
+            if (sensors.acceleration[0] > -0.5 && sensors.acceleration[0] < 0.5) {
+                if (sensors.acceleration[1] < 0.5 && sensors.acceleration[1] > -0.5) {
+                    if (sensors.acceleration[2] > 0.65 && sensors.acceleration[2] < 1.5)
+                        return "level";
+                    else if (sensors.acceleration[2] > -1.5 && sensors.acceleration[2] < -0.65)
+                        return "upside down";
+                }
+                else if (sensors.acceleration[2] > -0.5 && sensors.acceleration[2] < 0.5) {
+                    if (sensors.acceleration[1] > 0.7 && sensors.acceleration[1] < 1.5)
+                        return "left wing down";
+                    else if (sensors.acceleration[1] > -1.5 && sensors.acceleration[1] < -0.7)
+                        return "right wing down";
+                }
+            }
+            else if (sensors.acceleration[1] > -0.3 && sensors.acceleration[1] < 0.3
+                  && sensors.acceleration[2] > -0.3 && sensors.acceleration[2] < 0.3) {
+                if (sensors.acceleration[0] < 1.5 && sensors.acceleration[0] > 0.8)
+                    return "beak down";
+                else if (sensors.acceleration[0] < -0.8 && sensors.acceleration[0] > -1.5)
+                    return "beak up";
+            }
             else
                 return "in between";
         },
