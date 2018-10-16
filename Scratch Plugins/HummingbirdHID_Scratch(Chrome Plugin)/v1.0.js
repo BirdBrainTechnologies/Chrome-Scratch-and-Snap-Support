@@ -253,6 +253,12 @@
             //converts to 0 to 100 scale
             return Math.floor(sensorvalue[port - 1] / 2.55);
         },
+        getRotary: function (port) {
+            return ext.getRaw(port);
+        },
+        getLight: function (port) {
+            return ext.getRaw(port);
+        },
         hSpeak: function (phrase) {
             //uses Chrome text to speech API to speak the phrase
             var report = {message: "SPEAK", val: phrase};
@@ -289,8 +295,8 @@
             [' ', "Speak %s", "hSpeak", "Hello World!"],
             ['r', "HB temperature on port %m.port", "getHummingbirdTemp", 1],
             ['r', "HB sound on port %m.port", "getSound", 1],
-            ['r', "HB rotary on port %m.port", "getRaw", 1],
-            ['r', "HB light sensor on port %m.port", "getRaw", 1],
+            ['r', "HB rotary on port %m.port", "getRotary", 1],
+            ['r', "HB light sensor on port %m.port", "getLight", 1],
             ['r', "HB distance sensor on port %m.port", "getDistance", 1],
             ['r', "HB voltage on port %m.port", "getVolt", 1]
         ],
