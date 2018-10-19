@@ -207,13 +207,13 @@
         _shutdown: function () {
             //sends disconnect to Finch
             var report = {message: "R".charCodeAt(0)};
-            fPort.postMessage(report);
+            chrome.runtime.sendMessage(finchAppID, report);
         },
 
         resetAll: function () {
             //sends reset to Finch
             var report = {message: "X".charCodeAt(0)};
-            fPort.postMessage(report);
+            chrome.runtime.sendMessage(finchAppID, report);
             report = {message: "SPEAK", val: ""};
             fPort.postMessage(report);
 
