@@ -267,12 +267,12 @@
         _shutdown: function () {
             //sends disconnect to Hummingbird
             var report = {message: "R".charCodeAt(0)};
-            hPort.postMessage(report);
+            chrome.runtime.sendMessage(hummingbirdAppID, report);
         },
         resetAll: function () {
             //sends reset to Hummingbird
             var report = {message: "X".charCodeAt(0)};
-            hPort.postMessage(report);
+            chrome.runtime.sendMessage(hummingbirdAppID, report);
         },
         _getStatus: function () {
             var currStatus = hStatus;
