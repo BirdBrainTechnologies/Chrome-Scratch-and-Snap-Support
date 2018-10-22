@@ -143,7 +143,7 @@
         //setters for motors, LEDs, servos, and vibration
         setHummingbirdMotor: function (portnum, velocity) {
             var realPort = portnum - 1; //convert from zero-indexed
-            velocity = fitTo255(Math.floor(Math.abs(velocity) * 2.55));
+            velocity = Math.min(Math.max(Math.round(velocity) * 2.55, -255), 255);
 
             if (motors[realPort] === undefined) {
                 sendMotorMessage(realPort, velocity);
