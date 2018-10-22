@@ -1,4 +1,5 @@
 (function () {
+    var LED_COUNT = 4;
     var hummingbirdAppID = "lfloofocohhfeeoohpokmljiinfmpenj"; //unique app ID for Hummingbird Scratch App
     //port connecting to chrome app
     var hPort;
@@ -273,6 +274,10 @@
             //sends reset to Hummingbird
             var report = {message: "X".charCodeAt(0)};
             chrome.runtime.sendMessage(hummingbirdAppID, report);
+            
+            for (var i = 0; i < LED_COUNT; i++) {
+                ext.setLed(i, 0);
+            }
         },
         _getStatus: function () {
             var currStatus = hStatus;
