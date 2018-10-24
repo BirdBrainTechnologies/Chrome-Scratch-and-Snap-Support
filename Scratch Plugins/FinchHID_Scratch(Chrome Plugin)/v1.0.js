@@ -103,7 +103,10 @@
     var ext = {
         //sets the motor speed
         setFinchMotor: function(left, right) {
-            var speeds = [fitTo255(Math.round(left * 2.55)), fitTo255(Math.round(right * 2.55))];
+            function fitToSigned255(num) {
+                return Math.max(Math.min(num,255),-255);
+            }
+            var speeds = [fitToSigned255(Math.round(left * 2.55)), fitToSigned255(Math.round(right * 2.55))];
 
             if (moveSpeeds === null) {
               sendMotorMessage(speeds);
