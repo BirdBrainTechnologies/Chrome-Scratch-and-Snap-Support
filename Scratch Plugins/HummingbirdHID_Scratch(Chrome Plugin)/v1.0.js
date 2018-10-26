@@ -275,7 +275,7 @@
             var report = {message: "X".charCodeAt(0)};
             chrome.runtime.sendMessage(hummingbirdAppID, report);
             
-            for (var i = 0; i < LED_COUNT; i++) {
+            for (var i = 1; i <= LED_COUNT; i++) { // LEDs are 1-indexed for this function
                 ext.setLed(i, 0);
             }
         },
