@@ -198,8 +198,7 @@
                 else if (sensors.acceleration[0] < -0.8 && sensors.acceleration[0] > -1.5)
                     return "beak up";
             }
-            else
-                return "in between";
+            return "in between";
         },
         fSpeak: function (phrase) {
             //uses Chrome text to speech API to speak the phrase
