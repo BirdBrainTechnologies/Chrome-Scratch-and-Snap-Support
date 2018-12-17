@@ -72,6 +72,10 @@
         return Math.max(Math.min(num,255.0),0.0);
     }
 
+    var constrain = function (min, n, max) {
+        return Math.max(min, Math.min(n, max));
+    }
+
     //gets the connection status of the finch
     var getFinchStatus = function () {
         chrome.runtime.sendMessage(finchAppID, {message: "STATUS"}, function (response) {
@@ -100,47 +104,46 @@
             }
         });
     };
+
+    var setOutput = function (argumentHandler, readCache, writeCache, messageSender) {
+        var timeout = null;
+        return function () {
+            var args = argumentHandler(arguments);
+
+            if (readCache() === null) {
+                messageSender.apply(this, [args]);
+            }
+
+            writeCache(args);
+
+            if (timeouts[realPort] !== null) {
+                clearTimeout(timeouts[realPort]);
+                delete timeouts[realPort];
+            }
+
+            timeouts[realPort] = setTimeout(function() {
+                writeCache(null);
+                delete timeouts[realPort];
+            }, 300);
+        };
+    };
+
     var ext = {
         //sets the motor speed
-        setFinchMotor: function(left, right) {
-            function fitToSigned255(num) {
-                return Math.max(Math.min(num,255),-255);
-            }
-            var speeds = [fitToSigned255(Math.round(left * 2.55)), fitToSigned255(Math.round(right * 2.55))];
-
-            if (moveSpeeds === null) {
-              sendMotorMessage(speeds);
-            }
-
-            moveSpeeds = speeds;
-        },
+        setFinchMotor: setOutput(function (left, right) {
+            return [left, right].map(n => constrain(-255, Math.round(n * 2.55), 255));
+        }, () => moveSpeeds, speed => {moveSpeeds = speed;}, sendMotorMessage),
         //sets the LED color
-        setLED: function(red, green, blue) {
-            var values = [fitTo255(Math.round(red * 2.55)), fitTo255(Math.round(green * 2.55)), fitTo255(Math.round(blue * 2.55))];
-
-            if (LEDs === null) {
-                sendLEDMessage(values);
-            }
-
-            LEDs = values;
-        },
+        setLED: setOutput(function (red, green, blue) {
+            return arguments.map(intensity => constrain(0, Math.round(intensity * 2.55), 255));
+        }, () => LEDs, intensities => {LEDs = intensities;}, sendLEDMessage),
         //starts the buzzer at a certain frequency for a certain number of milliseconds
-        setBuzzer: function(freq, time) {
-            function constrain(n) {
-                return Math.max(Math.min(n, 0xFFFF), 0);
-            }
-            var value = {
-                freq: constrain(Math.round(freq)),
-                time: constrain(Math.round(time))
+        setBuzzer: setOutput(function (freq, time) {
+            return {
+                freq: constrain(0, Math.round(freq), 0xFFFF),
+                time: constrain(0, Math.round(time), 0xFFFF)
             };
-
-            if (buzzer === null) {
-                sendBuzzerMessage(value);
-            }
-
-            buzzer = value;
-        },
-
+        }, () => buzzer, buzz => {buzzer = buzz;}, sendBuzzerMessage),
 
         //the below functions return the sensor information of the finch
         getFinchTemp: function () {

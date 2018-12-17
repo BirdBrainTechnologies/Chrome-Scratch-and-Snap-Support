@@ -98,9 +98,10 @@
         });
     }
 
-    function fitTo255(num) {
-        return Math.max(Math.min(num,255.0),0.0);
+    var constrain = function (min, n, max) {
+        return Math.max(min, Math.min(n, max));
     }
+
     //gets the connection status fo the hummingbird
     var getHummingbirdStatus = function () {
         console.log("status");
@@ -134,6 +135,31 @@
         });
     };
 
+    var setOutput = function (argumentHandler, cache, messageSender) {
+        var timeouts = {};
+        return function (portnum) {
+            var realPort = portnum - 1;
+
+            var args = argumentHandler(arguments);
+
+            if (cache[realPort] === undefined) {
+                messageSender.apply(this, [realPort, args]);
+            }
+
+            cache[realPort] = args;
+
+            if (timeouts[realPort]) {
+                clearTimeout(timeouts[realPort]);
+                delete timeouts[realPort];
+            }
+
+            timeouts[realPort] = setTimeout(function() {
+                delete cache[realPort];
+                delete timeouts[realPort];
+            }, 300);
+        };
+    };
+
     var ext = {
         //all the below functions take in a portnum, it is assumed that the port
         //has the appropriate device connected to it. i.e. getDistance(1) assumes
@@ -141,59 +167,23 @@
         //is connected the information received will not be useful.
 
         //setters for motors, LEDs, servos, and vibration
-        setHummingbirdMotor: function (portnum, velocity) {
-            var realPort = portnum - 1; //convert from zero-indexed
-            velocity = Math.min(Math.max(Math.round(velocity) * 2.55, -255), 255);
-
-            if (motors[realPort] === undefined) {
-                sendMotorMessage(realPort, velocity);
-            }
-
-            motors[realPort] = velocity;
-        },
-        setTriLed: function (portnum, rednum, greennum, bluenum) {
-            var realPort = portnum - 1; //convert from zero-indexed
-            var realIntensities = [rednum, greennum, bluenum].map(function(intensity) {
+        setHummingbirdMotor: setOutput(function (portnum, velocity) {
+            return constrain(-255, Math.round(velocity * 2.55), 255);
+        }, motors, sendMotorMessage),
+        setTriLed: setOutput(function (portnum, rednum, greennum, bluenum) {
+            return [rednum, greennum, bluenum].map(function(intensity) {
                 return Math.floor(Math.max(Math.min(intensity*2.55, 255), 0));
             });
-
-            if (triLEDs[realPort] === undefined) {
-                sendTriLEDMessage(realPort, realIntensities);
-            }
-
-            triLEDs[realPort] = realIntensities;
-        },
-        setLed: function (portnum, intensitynum) {
-            var realPort = portnum - 1;
-            var realIntensity = fitTo255(Math.floor(intensitynum * 2.55));
-
-            if (LEDs[realPort] === undefined) {
-                sendLEDMessage(realPort, realIntensity);
-            }
-
-            LEDs[realPort] = realIntensity;
-        },
-        setServo: function (portnum, ang) {
-                var realPort = portnum - 1; //convert to zero-indexed number
-                var realAngle = Math.max(Math.min((ang * 1.25), 225.0), 0.0);
-
-                if (servos[realPort] === undefined) {
-                    sendServoMessage(realPort, realAngle);
-                }
-
-                servos[realPort] = realAngle;
-            },
-        setVibration: function (portnum, intensitynum) {
-                var realPort = portnum - 1; //convert to zero-indexed number
-                var realIntensity = fitTo255(Math.floor(intensitynum * 2.55));
-
-                if (vibrations[realPort] === undefined) {
-                  sendVibrationMessage(realPort, realIntensity);
-                }
-
-                vibrations[realPort] = realIntensity;
-            },
-
+        }, triLEDs, sendTriLEDMessage),
+        setLed: setOutput(function (portnum, intensitynum) {
+            return constrain(0, Math.floor(intensitynum * 2.55), 255);
+        }, LEDs, sendLEDMessage),
+        setServo: setOutput(function (portnum, ang) {
+            return constrain(0, ang * 1.25, 255);
+        }, servos, sendServoMessage),
+        setVibration: setOutput(function (portnum, intensitynum) {
+            return constrain(0, Math.floor(intensitynum * 2.55), 255);
+        }, vibrations, sendVibrationMessage),
 
         //getters for sensor information
         getHummingbirdTemp: function (port) {
