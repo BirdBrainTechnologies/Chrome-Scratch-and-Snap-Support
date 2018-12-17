@@ -108,7 +108,7 @@
     var setOutput = function (argumentHandler, readCache, writeCache, messageSender) {
         var timeout = null;
         return function () {
-            var args = argumentHandler(arguments);
+            var args = argumentHandler.apply(this, arguments);
 
             if (readCache() === null) {
                 messageSender.apply(this, [args]);

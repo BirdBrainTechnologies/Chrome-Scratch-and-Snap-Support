@@ -140,7 +140,7 @@
         return function (portnum) {
             var realPort = portnum - 1;
 
-            var args = argumentHandler(arguments);
+            var args = argumentHandler.apply(this, arguments);
 
             if (cache[realPort] === undefined) {
                 messageSender.apply(this, [realPort, args]);
