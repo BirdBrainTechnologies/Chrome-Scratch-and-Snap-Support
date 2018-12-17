@@ -135,7 +135,7 @@
         }, () => moveSpeeds, speed => {moveSpeeds = speed;}, sendMotorMessage),
         //sets the LED color
         setLED: setOutput(function (red, green, blue) {
-            return arguments.map(intensity => constrain(0, Math.round(intensity * 2.55), 255));
+            return [red, green, blue].map(intensity => constrain(0, Math.round(intensity * 2.55), 255));
         }, () => LEDs, intensities => {LEDs = intensities;}, sendLEDMessage),
         //starts the buzzer at a certain frequency for a certain number of milliseconds
         setBuzzer: setOutput(function (freq, time) {
