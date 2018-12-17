@@ -36,7 +36,7 @@
             }
         }
         if (msg.LED !== undefined) {
-            if (JSON.stringify(msg.LED.intensity) === LEDs[msg.LED.port]) {
+            if (msg.LED.intensity === LEDs[msg.LED.port]) {
                 delete LEDs[msg.LED.port];
             } else {
                 sendLEDMessage(msg.LED.port, LEDs[msg.LED.port]);
