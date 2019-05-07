@@ -1,4 +1,5 @@
 (function (ext) {
+    alert("This ScratchX page is out of date. If you have reached this page from a link or bookmark, please open ScratchX from the Hummingbird Connection App. If you reached this page from the Hummingbird Connection App, please update the app in the Chrome Web Store.");
     var hummingbirdAppID = "lfloofocohhfeeoohpokmljiinfmpenj"; //unique app ID for Hummingbird Scratch App
     //port connecting to chrome app
     var hPort;
