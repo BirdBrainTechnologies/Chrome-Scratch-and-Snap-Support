@@ -2,30 +2,39 @@
 	"name": "Finch Connection App",
 	"manifest_version": 2,
 	"version": "1.0",
-    "minimum_chrome_version": "38",
+	"minimum_chrome_version": "38",
 	"app": {
 		"background": {
-			"scripts": [ "main.js"]
+			"scripts": [
+				"common/common.js",
+				"main.js"
+			]
 		}
 	},
-    "externally_connectable": {
-        "matches": ["*://scratch.mit.edu/*",
-	  				        "*://scratchx.org/*",
-		  			        "*://snap.berkeley.edu/*"]
-    },
-
-    "icons": {  "16": "assets/finch16.png",
-                "48": "assets/finch48.png",
-                "128": "assets/finch128.png" },
-    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtY1Sqa368BvFnz1yqZ/cm1McE0rzp2bUpar8kiK119aBDg8TL9LgM2uYs4msJJX2MbuWjIVwhPZuSUY7TS2re9uEHjrCrYoYIvspi+b0E3Ev9KF1wQqhQgH1141w/DQqvOoF8VsPX0zW7BR+t9dLU/TSJQha/co1Q+ojhYSrd/JSilWRDAChk17rkxVCbsHzxpH722N2Pwm52xiIArmo+Xxd7BiE9ofSiOP4XRtnatwfxk8QoN2O3xtLj2Du9689FCWBJvKO32QSVhaYvq4JTW0jbEFFAby6biaIXUvDNpEe5BHIKBn8ALvLQzOwURARHuxImNsNsRYxXI9T+S/epQIDAQAB",
+	"externally_connectable": {
+		"matches": [
+			"*://scratch.mit.edu/*",
+			"*://scratchx.org/*",
+			"*://snap.berkeley.edu/*"
+		]
+	},
+	"icons": {
+		"16": "assets/finch16.png",
+		"48": "assets/finch48.png",
+		"128": "assets/finch128.png"
+	},
+	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtY1Sqa368BvFnz1yqZ/cm1McE0rzp2bUpar8kiK119aBDg8TL9LgM2uYs4msJJX2MbuWjIVwhPZuSUY7TS2re9uEHjrCrYoYIvspi+b0E3Ev9KF1wQqhQgH1141w/DQqvOoF8VsPX0zW7BR+t9dLU/TSJQha/co1Q+ojhYSrd/JSilWRDAChk17rkxVCbsHzxpH722N2Pwm52xiIArmo+Xxd7BiE9ofSiOP4XRtnatwfxk8QoN2O3xtLj2Du9689FCWBJvKO32QSVhaYvq4JTW0jbEFFAby6biaIXUvDNpEe5BHIKBn8ALvLQzOwURARHuxImNsNsRYxXI9T+S/epQIDAQAB",
 	"permissions": [
 		"hid",
-    "tts",
-    "browser",
+		"tts",
+		"browser",
 		{
 			"usbDevices": [
-				{ "vendorId": 9044, "productId": 4369 }
- 			]
+				{
+					"vendorId": 9044,
+					"productId": 4369
+				}
+			]
 		}
 	]
 }
