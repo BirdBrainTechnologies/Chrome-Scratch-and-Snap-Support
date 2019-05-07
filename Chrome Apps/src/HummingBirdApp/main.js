@@ -239,7 +239,7 @@ var recvSensors = function (connection) {
         if (devicePort !== undefined) {
             devicePort.postMessage({ sensors: sensor_nums });
         }
-        pollSensors(connection);
+        recvSensors(connection);
     });
 };
 
@@ -263,10 +263,7 @@ var pollSensors = function () {
             handleError();
             return;
         }
-        setTimeout(function () {
-            recvSensors(connection);
-            setTimeout(pollSensors, 50);
-        }, 10);
+        setTimeout(pollSensors, 50);
     });
 };
 
@@ -399,6 +396,7 @@ var connectFunction = function (connectInfo) {
             setTimeout(function () {
                 enableIOControls(true);
                 pollSensors();
+                recvSensors(connection);
             }, 250);
         });
     }, 100);//timeout gives us time to actually connect before we ask for type
