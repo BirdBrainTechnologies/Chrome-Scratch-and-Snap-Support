@@ -1,5 +1,5 @@
 (function (ext) {
-    alert("This is an old url that no longer works. Use the updated one in the Chrome App.");
+    alert("This ScratchX project is out of date. If you have reached this page from a link or bookmark, please open ScratchX from the Finch Connection App. If you reached this page from the Finch Connection App, please update the app in the Chrome Web Store.");
     finchAppID = "ojocioejjpmeccjfjlhkepchminjemod"; //unique app ID for Finch Scratch App
     //port connecting to chrome app
     var fPort;
