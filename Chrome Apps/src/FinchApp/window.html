@@ -1,26 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Finch App</title>
-    <script src="app.js"></script>
-  </head>
-  <body>
-        <img id="connected" src="assets/FinchConnected.png" />
-        <img id="disconnected" src="assets/FinchNotConnected.png" />
-        
-        <input type="image" id="scratchButton" src="assets/OpenScratchButton.png"/>
-        <br>
-        <br>
-        <input type="image" id="snapButton" src="assets/OpenSnap.png"/>
-        Snap Level
-        <form action="">
-          <input value="http://snap.berkeley.edu/snapsource/snap.html#cloud:Username=birdbraintech&ProjectName=FinchLevel1-Chrome100" type="radio" name="level"> Level 1: Simple Blocks<br>
-          <input value="http://snap.berkeley.edu/snapsource/snap.html#cloud:Username=birdbraintech&ProjectName=FinchLevel2-Chrome100" type="radio" name="level"> Level 2: Blocks with Parameters<br>
-          <input value="http://snap.berkeley.edu/snapsource/snap.html#cloud:Username=birdbraintech&ProjectName=FinchLevel3-Chrome100" type="radio" name="level"> Level 3: Parameters and Time<br>
-          <input value="http://snap.berkeley.edu/snapsource/snap.html#cloud:Username=birdbraintech&ProjectName=Finch-Chrome100" type="radio" name="level" checked> Level 4: Regular Snap!
-          
-        </form>
-  </body>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finch App</title>
+  <script src="app.js"></script>
+</head>
+
+<body>
+  <img id="connected" src="assets/FinchConnected.png" style="display: hidden" />
+  <img id="disconnected" src="assets/FinchNotConnected.png" />
+
+  <input type="image" id="scratchButton" src="assets/OpenScratchButton.png" />
+  <br>
+  <br>
+  <input type="image" id="snapButton" src="assets/OpenSnap.png" />
+  Snap Level
+  <form action="">
+    <input
+      value="http://snap.berkeley.edu/snapsource/snap.html#cloud:Username=birdbraintech&ProjectName=FinchLevel1-Chrome100"
+      type="radio" name="level"> Level 1: Simple Blocks<br>
+    <input
+      value="http://snap.berkeley.edu/snapsource/snap.html#cloud:Username=birdbraintech&ProjectName=FinchLevel2-Chrome100"
+      type="radio" name="level"> Level 2: Blocks with Parameters<br>
+    <input
+      value="http://snap.berkeley.edu/snapsource/snap.html#cloud:Username=birdbraintech&ProjectName=FinchLevel3-Chrome100"
+      type="radio" name="level"> Level 3: Parameters and Time<br>
+    <input
+      value="http://snap.berkeley.edu/snapsource/snap.html#cloud:Username=birdbraintech&ProjectName=Finch-Chrome100"
+      type="radio" name="level" checked> Level 4: Regular Snap!
+
+  </form>
+</body>
+
 </html>
