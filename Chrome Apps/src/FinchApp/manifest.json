@@ -15,7 +15,7 @@
 		"matches": [
 			"*://scratch.mit.edu/*",
 			"*://scratchx.org/*",
-			"*://snap.berkeley.edu/*"
+			"*://*.snap.berkeley.edu/*"
 		]
 	},
 	"icons": {
